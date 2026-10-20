@@ -111,14 +111,19 @@ function load(){
   // JSONP read of the public sheet (works from any static host, no CORS needed)
   const cb='shcb'+Date.now();const el=document.createElement('script');let done=false;
   window[cb]=r=>{done=true;try{
-      const rows=(r&&r.table&&r.table.rows)||[];let raw='';
-      for(const row of rows){const c=row.c||[];if(c[0]&&c[0].v==='safehours'){raw=c[1]&&(c[1].v||c[1].f)||'';break;}}
-      if(!raw)throw 0;const d=JSON.parse(raw);D=d;
-      try{localStorage.setItem('sh-cache',raw);}catch(e){}
+      if(!r||r.status==='error'){const e=(r&&r.errors&&r.errors[0])||{};throw {msg:'رد Google: '+(e.reason||'error')+(e.detailed_message?' — '+e.detailed_message:'')};}
+      // the JSON may arrive as a cell or, if Google treats the row as a header, as a column label
+      const t=r.table||{},cand=[];
+      (t.cols||[]).forEach(c=>{if(c&&c.label)cand.push(c.label);});
+      (t.rows||[]).forEach(row=>(row.c||[]).forEach(c=>{if(c){if(c.v!=null)cand.push(String(c.v));if(c.f)cand.push(String(c.f));}}));
+      let d=null,raw='';
+      for(const x of cand){const s=x.trim();if(s[0]!=='{')continue;try{const o=JSON.parse(s);if(o&&o.safeBase!=null){d=o;raw=s;break;}}catch(e){}}
+      if(!d)throw {msg:'الملف لا يحتوي بيانات صالحة ('+cand.length+' خلايا مقروءة). افتح البرنامج الأساسي مرة ليحدّثه.'};
+      D=d;try{localStorage.setItem('sh-cache',raw);}catch(e){}
       ok(true);
-    }catch(e){fail('الملف لا يحتوي بيانات صالحة.');}
+    }catch(e){fail(e&&e.msg?e.msg:'الملف لا يحتوي بيانات صالحة.');}
     finally{delete window[cb];el.remove();}};
-  el.src=`https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:json;responseHandler:${cb}&sheet=Display&headers=0&range=A1:B1&_=${Date.now()}`;
+  el.src=`https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:json;responseHandler:${cb}&sheet=Display&headers=0&tq=${encodeURIComponent('select A, B')}&_=${Date.now()}`;
   el.onerror=()=>{if(!done){delete window[cb];el.remove();fail('تعذّر الوصول إلى ملف البيانات. تأكد أن الملف مشارك «أي شخص لديه الرابط».');}};
   document.head.appendChild(el);
   setTimeout(()=>{if(!done)fail('تعذّر الوصول إلى ملف البيانات. تأكد أن الملف مشارك «أي شخص لديه الرابط».');},20000);
