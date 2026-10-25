@@ -1101,7 +1101,7 @@ function gSeg(root,k,opts){const v=G[root][k];return `<div class="seg wrap" role
 function renderGate(){
   const nv=insideV().length,ne=outsideE().length;
   $("#view").innerHTML=`<div class="stack">
-    <div class="pagetitle"><div><h2>البوابة</h2><div class="en">Gate log — visitors, contractors, suppliers & employee exits</div></div>${S.settings.gateForGuards?"":`<span class="chip warn">تجريبي — يظهر للمسؤول فقط</span>`}</div>
+    <div class="pagetitle"><div><h2>البوابة</h2><div class="en">Gate log — visitors, contractors, suppliers & employee exits</div></div><span class="chip warn" id="g-trial" ${S.settings.gateForGuards?"hidden":""}>تجريبي — يظهر للمسؤول فقط</span></div>
     <div class="gtabs"><button data-act="gTab" data-t="v" aria-pressed="${G.tab==="v"}"><b>الزوار والمقاولون</b><span class="formcode">37-3</span><span class="chip ${nv?"warn":"na"}" id="gc-v">${nv} داخل</span></button>
       <button data-act="gTab" data-t="e" aria-pressed="${G.tab==="e"}"><b>استئذان الموظفين</b><span class="formcode">37-6</span><span class="chip ${ne?"warn":"na"}" id="gc-e">${ne} خارج</span></button></div>
     <div id="g-now"></div>
@@ -1687,7 +1687,7 @@ function startSubs(db){
   S.ready=true;renderBanner();renderTabs();
   db.doc("config/settings").onSnapshot(snap=>{
     if(snap.exists){const d=snap.data();S.settings={startDate:d.startDate||"",gateForGuards:!!d.gateForGuards,shifts:(d.shifts&&d.shifts.length?d.shifts:DEFAULT_SETTINGS.shifts),guards:(d.guards||[]).map(g=>typeof g==="string"?g:g.name).filter(Boolean)};S.guardObjs=(d.guards||[]).filter(g=>g&&typeof g==="object").map(g=>({name:g.name||"",pin:String(g.pin||"")}))}
-    renderBanner();renderTabs();if(S.view==="gate"&&!gateOn())go("home");
+    renderBanner();renderTabs();if(S.view==="gate"&&!gateOn())go("home");{const t=document.getElementById("g-trial");if(t)t.hidden=!!S.settings.gateForGuards}
     if(S.view!=="settings"){SETF=null;if(!$("#modal").hidden||document.activeElement?.matches("input,textarea"))return;if(S.view==="home")renderHome();renderPill()}
   },e=>console.warn(e));
   const from=addDays(ymd(new Date()),-45);
