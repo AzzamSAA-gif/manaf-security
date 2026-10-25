@@ -1,5 +1,5 @@
 /* Service worker: keeps the security-logs app openable without internet. */
-const VER = 'sec-29091c3fcd';
+const VER = 'sec-717454070a';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VER).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
