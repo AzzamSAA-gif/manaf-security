@@ -1,5 +1,5 @@
 /* Service worker: keeps the security-logs app openable without internet. */
-const VER = 'sec-ea5f01cce7';
+const VER = 'sec-ba153d6ccd';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VER).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -15,7 +15,7 @@ self.addEventListener('fetch', e => {
   if (u.origin === location.origin) {
     if (req.mode === 'navigate') {
       const isApp = u.pathname === '/' || u.pathname.endsWith('/index.html');
-      e.respondWith(timeout(fetch(req), 6000).then(r => {
+      e.respondWith(timeout(fetch(req, { cache: 'no-store' }), 6000).then(r => {
         if (r && r.ok) { const c = r.clone(); caches.open(VER).then(x => x.put(isApp ? './index.html' : req, c)); }
         return r;
       }).catch(() => caches.match(isApp ? './index.html' : req, { ignoreSearch: true }).then(r => r || caches.match('./index.html'))));
