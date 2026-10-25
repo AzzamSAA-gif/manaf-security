@@ -1,9 +1,8 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>سجلات أمن مناف</title>
 <meta name="theme-color" content="#FFFFFF">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,12 +11,1691 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="manifest" href="manifest.webmanifest">
+<title>سجلات أمن مناف</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
 <style>
-  html,body{margin:0;height:100%;background:#F2F4EF}
-  iframe{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);width:100%;height:calc(100% - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));border:0;display:block}
+/* Layout: a field-operations console. Header + tabs (bottom bar on phones), one task per screen,
+   controlled-form codes kept visible so every screen maps to its paper original. */
+:root{
+  --bg:#F2F4EF; --surface:#FFFFFF; --surface-2:#E8ECE3; --ink:#17201A; --muted:#5B685E; --line:#D3DACB;
+  --brand:#84BD3A; --brand-ink:#3C6611; --deep:#1E3816; --on-deep:#F3F8EC;
+  --ok:#2C7A37; --ok-bg:#E3F1E2; --warn:#A35F00; --warn-bg:#FBEFD9; --bad:#B42318; --bad-bg:#FBE4E1; --na:#6F7A72; --na-bg:#E9ECE8;
+  --sig-bg:#FFFFFF; --sig-line:#B9C3B2; --shadow:0 1px 2px rgba(23,32,26,.06),0 6px 18px rgba(23,32,26,.06);
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1410; --surface:#151D17; --surface-2:#1E2821; --ink:#E5EBE2; --muted:#9BA89E; --line:#2B372E;
+  --brand:#93CB47; --brand-ink:#A8D86A; --deep:#22401A; --on-deep:#EEF6E4;
+  --ok:#62C471; --ok-bg:#16301B; --warn:#E6A642; --warn-bg:#36280F; --bad:#F27466; --bad-bg:#3A1714; --na:#929C94; --na-bg:#242C26;
+  --sig-bg:#FFFFFF; --sig-line:#B9C3B2; --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1410; --surface:#151D17; --surface-2:#1E2821; --ink:#E5EBE2; --muted:#9BA89E; --line:#2B372E;
+  --brand:#93CB47; --brand-ink:#A8D86A; --deep:#22401A; --on-deep:#EEF6E4;
+  --ok:#62C471; --ok-bg:#16301B; --warn:#E6A642; --warn-bg:#36280F; --bad:#F27466; --bad-bg:#3A1714; --na:#929C94; --na-bg:#242C26;
+  --sig-bg:#FFFFFF; --sig-line:#B9C3B2; --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+#login{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.lbox{width:min(100%,380px);display:flex;flex-direction:column;gap:14px;text-align:center}
+.lbox .logo{align-self:center;padding:10px 16px}.lbox .logo img{height:54px}
+.lbox h2{font-family:var(--f-display);margin:6px 0 0;font-size:1.35rem}
+.lbox form{display:flex;flex-direction:column;gap:12px;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.lbox input{font-size:1.6rem;letter-spacing:.4em;text-align:center;font-family:var(--f-mono)}
+.lbox .err{color:var(--bad);font-size:.88rem;min-height:1.2em;text-align:center}
+.userchip{white-space:nowrap;min-height:36px;padding:6px 12px;font-size:.82rem}
+.gprow{display:grid;grid-template-columns:1fr 130px auto;gap:8px;align-items:end;padding:8px 0;border-top:1px solid var(--line)}
+.gprow:first-child{border-top:0}
+@media (max-width:760px){.userchip .lbl{display:none}}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.en{font-size:.78em;color:var(--muted);font-weight:500;letter-spacing:.01em}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:14px;padding-block:10px}
+.logo{background:#fff;border-radius:8px;padding:4px 8px;display:flex;align-items:center;border:1px solid var(--line)}
+.logo img{height:34px;width:auto;display:block}
+.brandtxt{min-width:0}
+.brandtxt h1{font-family:var(--f-display);font-size:1.08rem;margin:0;line-height:1.3;font-weight:600}
+.brandtxt .en{display:block;line-height:1.2}
+.userchip{margin-inline-start:auto}.userchip+.shiftpill{margin-inline-start:0}
+.syncchip{margin-inline-start:auto;white-space:nowrap;min-height:36px;padding:6px 12px;font-size:.82rem}
+.syncchip:not([hidden])+.userchip{margin-inline-start:0}
+.syncchip.warn{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.syncchip.info{background:var(--surface-2)}
+.syncchip.muted{color:var(--muted)}
+@media (max-width:760px){.syncchip{padding:6px 10px}.syncchip .lbl{display:none}}
+@media (max-width:480px){.syncchip:not([hidden])~.shiftpill .mono{display:none}}
+.shiftpill{margin-inline-start:auto;display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:999px;padding:6px 12px;font-size:.85rem;white-space:nowrap}
+.shiftpill .dot{width:8px;height:8px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 25%,transparent)}
+nav.tabs{border-top:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:4px;overflow-x:auto}
+nav.tabs a{display:flex;align-items:center;gap:8px;padding:10px 14px;text-decoration:none;color:var(--muted);font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs a svg{width:18px;height:18px;flex:none}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--brand)}
+nav.tabs a .code{font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+@media (max-width:440px){#pillname{display:none}}
+@media (min-width:761px) and (max-width:980px){.brandtxt .en{display:none}.brandtxt h1{white-space:nowrap}}
+@media (max-width:760px){.brandtxt{display:none}.userchip{padding:6px 10px}}
+@media (max-width:760px){
+  .brandtxt .en,.shiftpill .lbl{display:none}
+  .top .wrap{gap:10px}.logo img{height:28px}.brandtxt h1{font-size:.95rem}
+  nav.tabs{position:fixed;inset:auto 0 0 0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+  nav.tabs .wrap{justify-content:space-around;gap:0;padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+  nav.tabs a{flex-direction:column;gap:2px;padding:8px 6px;font-size:.72rem;border-bottom:0;border-top:3px solid transparent}
+  nav.tabs a[aria-current="page"]{border-top-color:var(--brand)}
+  nav.tabs a .code{display:none}
+  main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+
+main{padding-block:20px 40px}
+.banner{border-radius:var(--r);padding:10px 14px;margin-top:14px;font-size:.9rem;display:flex;gap:10px;align-items:flex-start}
+.banner.warn{background:var(--warn-bg);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+.banner.info{background:var(--surface-2)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.card h2,.card h3{font-family:var(--f-display);font-weight:600;margin:0 0 4px;line-height:1.35;text-wrap:balance}
+.card h2{font-size:1.15rem}.card h3{font-size:1rem}
+.cardhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.formcode{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 6px;white-space:nowrap}
+.pagetitle{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.pagetitle h2{font-family:var(--f-display);font-size:1.45rem;margin:0;font-weight:600;line-height:1.3}
+
+/* fields */
+.field{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 180px}
+.field label{font-size:.82rem;font-weight:600}
+.field label .en{font-weight:400;margin-inline-start:4px}
+input[type=text],input[type=date],input[type=time],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%;min-height:42px}
+textarea{min-height:64px;resize:vertical}
+.field input,.field select,.field textarea{min-width:0;max-width:100%}
+input[type=date],input[type=time]{direction:ltr;text-align:center;-webkit-appearance:none;appearance:none;display:block;line-height:1.4}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:center}
+select{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+input:disabled,select:disabled,textarea:disabled{background:var(--surface-2);color:var(--muted)}
+.req::after{content:" *";color:var(--bad)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 16px;min-height:42px;cursor:pointer;font-weight:600;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--deep);border-color:var(--deep);color:var(--on-deep)}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.big{min-height:56px;font-size:1.05rem;padding:12px 22px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--brand-ink)}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.block{width:100%}
+
+/* segmented status */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.seg button{border:0;background:var(--surface);padding:8px 12px;min-height:40px;min-width:54px;cursor:pointer;font-weight:600;font-size:.86rem;color:var(--muted);border-inline-start:1px solid var(--line)}
+.seg button:first-child{border-inline-start:0}
+.seg button[aria-pressed="true"][data-val="ok"],.seg button[aria-pressed="true"][data-val="yes"].good{background:var(--ok);color:#fff}
+.seg button[aria-pressed="true"][data-val="remark"],.seg button[aria-pressed="true"][data-val="issue"],.seg button[aria-pressed="true"][data-val="yes"]{background:var(--warn);color:#fff}
+.seg button[aria-pressed="true"][data-val="issue"]{background:var(--bad)}
+.seg button[aria-pressed="true"][data-val="na"],.seg button[aria-pressed="true"][data-val="no"]{background:var(--na);color:#fff}
+.seg button:disabled{cursor:default}
+.seg button[aria-pressed="true"]:not([data-val]){background:var(--deep);color:var(--on-deep)}
+.edgrid{display:flex;flex-direction:column;gap:12px}
+.edrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;padding:10px 0;border-top:1px solid var(--line)}
+.edrow .lbl{flex:1 1 220px;font-weight:600;min-width:0}
+.edrow select{width:auto;min-width:130px}
+.edround{border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px}
+.edareas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px}
+.lockline{display:flex;gap:8px;align-items:center;font-size:.82rem;color:var(--muted)}
+
+/* checklist rows */
+.checklist{display:flex;flex-direction:column}
+.ck{display:grid;grid-template-columns:1fr auto auto;gap:10px 14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.ck:first-child{border-top:0}
+.ck .lbl{min-width:0;font-weight:600}
+.ck .lbl .en{display:block;font-weight:400}
+.ck .note{grid-column:1/-1}
+.ck .sub{font-size:.72rem;color:var(--muted);text-align:center;margin-bottom:2px}
+@media (max-width:640px){.ck{grid-template-columns:1fr 1fr}.ck .lbl{grid-column:1/-1}}
+
+/* signatures */
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
+.person{border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
+.person .role{font-weight:700;font-size:.9rem}
+.person .two{display:grid;grid-template-columns:1fr 132px;gap:10px}
+.sigbox{position:relative;background:var(--sig-bg);border:1px dashed var(--sig-line);border-radius:8px;height:110px;touch-action:none}
+.sigbox canvas{width:100%;height:100%;display:block;border-radius:8px;cursor:crosshair}
+.sigbox .ph{position:absolute;inset:auto 10px 8px 10px;font-size:.75rem;color:#7d8a80;pointer-events:none;border-top:1px solid #d6ddd0;padding-top:2px}
+.sigbox .clr{position:absolute;top:6px;inset-inline-start:6px;background:#fff;border:1px solid #d6ddd0;border-radius:6px;font-size:.72rem;padding:2px 8px;cursor:pointer;color:#3d4a40}
+.sigimg{background:var(--sig-bg);border-radius:6px;height:56px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+.sigimg img{max-height:52px;max-width:100%}
+
+/* status chips */
+.gtabs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gtabs button{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;justify-content:flex-start;text-align:start;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;cursor:pointer;font:inherit;color:var(--ink)}
+.gtabs button b{flex:1 1 100%;font-size:.95rem}
+.gtabs button[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand) inset;background:var(--surface-2)}
+.gform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.gform .field.wide{grid-column:1/-1}
+.sgwrap{position:relative;min-width:0}
+.sgwrap input{width:100%}
+.sugg{position:absolute;inset-inline:0;top:calc(100% + 4px);z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.18);max-height:min(300px,45vh);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sugg[hidden]{display:none}
+.sugg button{display:flex;gap:10px;align-items:center;width:100%;min-height:48px;padding:8px 12px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:start;cursor:pointer}
+.sugg button:last-child{border-bottom:0}
+.sugg button:active,.sugg button:hover{background:var(--surface-2)}
+.sugg .no{font-family:var(--f-mono);font-weight:600;color:var(--brand-ink);min-width:62px}
+.sugg .nm{display:flex;flex-direction:column;min-width:0}
+.sugg .nm b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sugg .nm small{color:var(--muted);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sugg .empty{padding:12px;color:var(--muted);font-size:.85rem}
+@media (max-width:620px){.gform{grid-template-columns:minmax(0,1fr)}}
+.seg.wrap{display:flex;flex-wrap:wrap;width:fit-content;max-width:100%}
+.seg.wrap button{flex:1 1 auto}
+.nowcard .li{align-items:center}
+.nowcard .li .btn{flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}.chip.na{background:var(--na-bg);color:var(--na)}
+.chip.brand{background:color-mix(in srgb,var(--brand) 18%,transparent);color:var(--brand-ink)}
+
+/* home */
+.hero{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+@media (max-width:900px){.hero{grid-template-columns:1fr 1fr}.hero .now{grid-column:1/-1}}
+@media (max-width:520px){.hero{grid-template-columns:1fr}}
+.now{background:var(--deep);color:var(--on-deep);border-color:var(--deep)}
+.now .k{font-size:.8rem;opacity:.8}
+.now .shiftname{font-family:var(--f-display);font-size:1.6rem;font-weight:600;line-height:1.25;margin:4px 0}
+.now .times{font-family:var(--f-mono);font-size:1.05rem}
+.now .dates{margin-top:10px;font-size:.85rem;opacity:.9}
+.tile .big{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .k{font-size:.85rem;font-weight:600}
+.tile .actions{margin-top:12px}
+.tile{display:flex;flex-direction:column;gap:6px}
+.tile .spacer{flex:1}
+
+.comp{overflow-x:auto}
+.comp table{border-collapse:separate;border-spacing:4px;width:100%;min-width:360px}
+.comp th{font-size:.75rem;color:var(--muted);font-weight:600;text-align:center;padding:2px}
+.comp th.d{text-align:start;white-space:nowrap}
+.comp td.cell{height:42px;border-radius:7px;text-align:center;cursor:pointer;font-size:.78rem;font-weight:600;border:1px solid transparent}
+.comp td.cell.ok{background:var(--ok-bg);color:var(--ok)}
+.comp td.cell.warn{background:var(--warn-bg);color:var(--warn)}
+.comp td.cell.miss{background:var(--bad-bg);color:var(--bad)}
+.comp td.cell.up{background:transparent;border:1px dashed var(--line);color:var(--muted);cursor:default}
+.comp td.cell.cur{outline:2px solid var(--brand);outline-offset:1px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:5px;vertical-align:-1px}
+
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.li .body{flex:1;min-width:0}
+.li .t{font-weight:600}
+.li .m{font-size:.8rem;color:var(--muted)}
+.empty{padding:22px 10px;text-align:center;color:var(--muted);font-size:.9rem}
+.empty b{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+
+/* patrol */
+.areas{display:flex;flex-direction:column}
+.area{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.area:first-child{border-top:0}
+.area .lbl{font-weight:600;min-width:0}
+.area .lbl .en{display:block;font-weight:400}
+.roundhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.roundno{font-family:var(--f-display);font-weight:700;font-size:1.2rem;background:var(--surface-2);border-radius:8px;padding:4px 12px}
+.live{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-weight:600;font-size:.85rem}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.live::before{animation:none}}
+.rounds{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:.85rem;min-width:760px}
+table.tbl th,table.tbl td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:start;vertical-align:top}
+table.tbl th{font-size:.74rem;color:var(--muted);font-weight:600;background:var(--surface-2)}
+table.tbl td.c,table.tbl th.c{text-align:center}
+.mk-ok{color:var(--ok);font-weight:700}.mk-issue{color:var(--bad);font-weight:700}.mk-na{color:var(--na);font-size:.75rem;font-weight:600}
+
+/* records */
+.reclist{display:flex;flex-direction:column;gap:8px}
+.rec{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer;text-align:start;width:100%}
+.rec:hover{border-color:var(--brand)}
+.rec .ic{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);color:var(--brand-ink)}
+.rec .ic svg{width:22px;height:22px}
+.rec .t{font-weight:700}
+.rec .m{font-size:.8rem;color:var(--muted);display:flex;gap:6px 12px;flex-wrap:wrap}
+.rec .flags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:560px){.rec{grid-template-columns:auto 1fr}.rec .flags{grid-column:1/-1;justify-content:flex-start}}
+
+/* modal */
+#modal{position:fixed;inset:0;z-index:50;background:rgba(10,16,12,.55);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px))}
+.mbox{background:var(--surface);border-radius:12px;width:min(100%,980px);box-shadow:0 20px 60px rgba(0,0,0,.3);margin-top:12px}
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);border-radius:12px 12px 0 0;flex-wrap:wrap}
+.mbody{padding:16px;overflow-x:auto}
+
+/* official form rendering */
+.of{background:#fff;color:#1a1a1a;border-radius:6px;padding:14px;font-size:13px;min-width:640px;direction:rtl}
+.of table{width:100%;border-collapse:collapse}
+.of td,.of th{border:1px solid #9aa39b;padding:6px 7px;vertical-align:middle;text-align:start}
+.of th{background:#eef2ea;font-weight:700;font-size:12px}
+.of .en{color:#5b665d;font-size:11px;display:block}
+.of-head td{text-align:center}
+.of-head .of-logo{width:150px}
+.of-head .of-logo img{max-height:52px}
+.of-head .of-title{font-weight:700;font-size:16px}
+.of-head span{display:block;font-size:10.5px;color:#5b665d}
+.of-head b{font-family:var(--f-mono);font-size:12px}
+.of .sp{height:10px}
+.of .c{text-align:center}
+.of .sec{background:#dfe8d6;font-weight:700;text-align:center}
+.of .sig{height:40px;max-width:130px}
+.of .box{display:inline-block;margin-inline-end:10px;white-space:nowrap}
+.of .on{font-weight:700}
+.of .foot{margin-top:10px;font-size:11px;color:#5b665d;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid #c9d0c6;padding-top:6px}
+.of .ok{color:#23702f;font-weight:700}.of .bad{color:#b42318;font-weight:700}.of .warn{color:#9a5a00;font-weight:700}
+
+/* toast */
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:calc(100% - 32px)}
+@media (max-width:760px){#toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}}
+.toast{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:.9rem;box-shadow:var(--shadow)}
+.toast.bad{background:var(--bad);color:#fff}
+footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;color:var(--muted)}
+@media (max-width:760px){footer.ft{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}}
+.sel{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.sel .field{flex:1 1 150px;min-width:0}
+.sel>.btn{flex:0 0 auto}
+.stamp{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.gl{display:flex;flex-wrap:wrap;gap:8px}
+.gl .chip{font-size:.85rem;padding:5px 6px 5px 12px;background:var(--surface-2);color:var(--ink)}
+.gl .chip button{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:1rem;line-height:1;padding:0 4px}
+.shiftrow{display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:8px;align-items:end;padding:8px 0;border-top:1px solid var(--line)}
+.shiftrow:first-child{border-top:0}
+@media (max-width:560px){.shiftrow{grid-template-columns:1fr 1fr}.shiftrow .field:first-child{grid-column:1/-1}}
+.steps{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
 </style>
 </head>
 <body>
-<iframe src="https://script.google.com/macros/s/AKfycbw2zG-gtAgq1KRD63FIvci0it44OjCIq4-7LevxlfKCY4Af80H-nUpovngxnvxUmHtW/exec" title="سجلات أمن مناف" allow="clipboard-write"></iframe>
+<script>window.addEventListener("error",function(e){try{var d=document.getElementById("__err")||document.body.insertBefore(document.createElement("pre"),document.body.firstChild);d.id="__err";d.style.cssText="color:#b00;white-space:pre-wrap;font:11px monospace;padding:8px;background:#fee;direction:ltr;text-align:left;margin:0";var s=[].slice.call(document.scripts).sort(function(x,y){return y.text.length-x.text.length})[0];var L=s?s.text.split("\n"):[];var i=e.lineno-1;d.textContent+="خطأ في التحميل: "+e.message+" @"+e.lineno+":"+e.colno+"\n";for(var k=i-1;k<=i+1;k++){if(L[k]!==undefined)d.textContent+=(k+1)+": "+L[k].slice(Math.max(0,e.colno-80),e.colno+80)+"\n"}}catch(_){}});</script>
+
+
+<div id="app" dir="rtl" lang="ar">
+  <header class="top">
+    <div class="wrap">
+      <div class="logo"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAB8ASwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD7AooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoozRQAUUUUAFFFFABRRRQAUUUUAFJkUy6nitraW4mcJFEjO7HoqgZJ/IV82eJ/jb4iN6t6t6PDuky2I1O1A0g3rmyMnlrcTtuHlhjyFAJAIoA+l6K4j4ZeLNQ1q41PQtft7eDXNKELzNbE+TcwTKWinjzyAwBBU8ggiu3oAKKKKACvLvj58YtK+FNlp7Xen3GoXd/LiOGP5QIgRvcseMgdB1Jr0q/u7axs5ry7njgt4UMkssjbVRQMkk9hXzF8Uv2ivhDrj/wBjah4Yu/FFjbzrLHMY1SPep4K7jnH8xVRVxNn0h4V1ux8SeHrHXdNaRrO9hWaEyIUbafUHoaZ4x8RaX4T8NXviHWpmh0+yTzJ5FQsVXIHQcnkivKvhT+0V4C8Zarb6BElxol7KRHbQ3SqI5DjhVYcA+grd/anOf2fvFw/6c1/9GJRbWwX0Op+HXjjw/wCPtCfW/DV1Jc2STtbl3iMZ3qASMHnuK6avn/8AYO/5Itdf9hm4/wDQUr6ApSVnYE7oQnmlzXhH7SviP4uaL4k8LweANM8+xnulDvGm8zTZOIZB/DGRk5/XivbdLe7k0+3e/ijhu2iUzxxtuVHx8wB7gHvQ0MtUVzfxM8WW3gbwPqniu8tZbq306ISPFEQGcF1XAzx/FWR8FfiTY/FDwvca9p2n3NjDBeNaGOdgWLKqtnjt836UrAd3RRXA/Fv4s+EfhnZxSeILt2urgE29nAu6aQDvjsPc0JXA76ivmi2/bB8HPcqk/hvWYoi2C4MbED1xmvd/AfjDQPG3h+LXPDmoR3lnISuRw0bDqrL1Vh6Gm4tCTudBRRRSGFFFFABRQeKaWpNpAONcN478bXHhvVorKKwjuFeESbmcgjkjFdwrA1458bB/xU9t/wBeo/8AQjXgcR4yrhcE6tF2d0Y1pOMbo6fwR47ufEOujT5NPigUxM+9ZCTx2rvB0rxP4Of8jmP+vaT+le17gBU8NY2ti8H7Ws7u4UJOUbsdRTQ1Or6FST2NgooopgFFFFABRRRQBW1S0jv9MurGUkR3MLwuR1CspU/zr5T8TeA1ac6b49sNdS903w8miaXeaZYPcQzeVLvgulKn72AoaNh1zX1rRigDzT4O6R4gm1jVvGvii2azvtStLWxt7d1CyCCANiSRRwru7s23+EYFdJ8RPHfhnwDov9q+JdRS0hZtsaD5pJW9FXqa6cACvP8A45fDLSvid4Pk0i9It72EmWwuwMtBJj9VPQimrX1Bna6TqNnqum2+pafcR3FpcxiSGWM5V1IyCKt18NeD/H/xM/Z41R/CvinR5b/Q1kJiRydgGeWhk6YPXaa9hsP2tPhxNbq91aa1byEfMn2cNj8QapwfQXMWv25tVvNO+C621pM0S6hqMVvOVOC0eGYr9CVFV/2YvhL4Fk+D+ia1qegWWp6hqsH2mea6j3kZYgKoPQACvMf2nvjZ4F+JPw6j0XRG1JL+C+juYxNb7UYAFWBOfRq0/gD+0l4Y8K/DjTfC/iizv459MjMMU1vGHWWPJIzzwRnFVZ8pOlyj+218OfDXhKy0LxT4YsY9IuZ7preWO2G1CVXergdmBHavWPirqlzrn7G11rN4c3N7oFtNKfVyUyfxPNeIftXfGbwj8S/Cek6Z4cW/E9nfNPJ9oh2DaYyvHPXJr1/xof8AjBdP+xbtf5pRrpcO9h/7B3/JF7r/ALDNx/6ClfQFfF37MHxx8GfDr4dT6D4gGoG7fUZbkeRBvXYwUDnPXg16p/w1d8Mf7utf+An/ANeplF3HFqx74QCc4pa8D/4au+GP9zWv/AT/AOvR/wANX/DD+7rX/gJ/9elysd0dX+1f/wAm9eL/APr0j/8AR0dcR+wOf+LQ6p/2HJf/AEVFXAftD/tFeH/G3gC68H+FLC/kk1NkSeWePbtQOG2qOpJIArn/ANmr4z2vwlg1Xwp4w0q+itpbn7UrJF+9hkKhWVlODghQapRfLYm6ufc5r4ffR7b4m/tp6lpHidnuLCC8mTydxAMUCfLH7Anrj1Neu3v7WXw3itJJLa21meZVJSM24XcewyTxXzJ4L+I2peH/AIzr8V73SJntr2+uHlRVIVlk4dUY8FlBFOEWhyaPt7Vvg18NdT0qbTZPCGlQpMnliSGHY6dgQw5yK+df2H7m60f4veK/CSTu9j5EpKk8b4Ztitj1IOK9Mi/aw+GOFZk1kHgkfZen615N+xbew6j+0J4j1CDd5VzZ3c0e4YO1plYZ/A0JOzuJtXVj7XooorIsKKKKAEYZ/OvnvW9Z1tdVvIG1W82xzuoHmkYAY19CHpXzr4uTyvFerJ6Xcn/oVfE8aVKlOjTlBtanLiW0k0eo/Bq7nuvDdwLiZ5XjumG52JOCoPeuW+Nn/Iz23/XoP/QjW58DHzpGpJ6XKn81rD+Nn/IzW3/XoP8A0I1yY+o6nD0JPfQmbvRRV+Dn/I5j/r3k/pXd/F66mtfCDNBK8bvcRqGRsEc5/pXCfBz/AJHMf9e8n9K6/wCNr48MWyf3rtf0VqMpqOnkFWS8wpO1FnmVlretrcQxx6reDdIq/wCtJ6kCvoiMEKATnivm/Q4/N1zT4/71zGP/AB4V9JDg10cF1KlSFRzk3sVhW2ncWiiivuTqCiiigAooooAKKKKACg8iiigCjrGj6XrFm1nqthbX1uwwY54w6/ka4C6+A3wnuZmlfwdZKzddhZR+QNem0U02hWPLf+GfvhL/ANChbf8Afx/8aP8Ahn/4S/8AQoW3/fx/8a9Soo5mFkeW/wDDP3wk7+ELb/v4/wDjXaXng/w9d+DB4OuNPR9DFutt9lJO3y1xhc9ewreoobbHY8t/4Z/+EmP+RRtv+/j/AONH/DPvwk/6FG3/AO/r/wCNepUUczFZHlv/AAz98JP+hRt/+/r/AONH/DPvwk/6FG3/AO/r/wCNepUU+ZhZHB+GPg/8N/DeoLqGkeFLCK6Q5SV1LlT6jdnFXfGfwz8DeMLhbnxF4csr24XgTFNsmPQsOTXX0UuZhZHl8XwC+EsciuPB1oSpyAzsR/Ouv1DwT4Tv/DqeHrvw/p0ulRjCWpgGxPceh966GkbpRzMLI8vP7P8A8JCSf+EQtR/20f8Axrc8EfC3wL4L1Z9V8NaDDYXkkRhaRHYkoSCRyfYV4b8df2j9e0Tx5c+DPAmmwXFzZy/Z5riSMytJN3REHp0+tdJ+zp8QPi14l8aXGlePtCeysBYvPFM1iYcuGUAZ6dCeKpqVhJo+g6KKKgobI2xWY9AMmuMm+JXhyNiBJcPj+7FXZSgGNgfQ18zXA/0iUdt7fzr5TiXOK+WqHsranPXquFrH0P4c1i213TF1C0DrEzMo3jByDg14j4/Xb411Zf8Ap4J/MA16f8Hf+RKj56TyfzrzP4jDHjjVf+uw/wDQVryOJK0sRldGrPd/5Gdd81NNnZ/Ak/6Lqy56Sxn/AMdNZPxr/wCRmtv+vUf+hGtP4E52auP9qL+TVmfGv/kZrb/r0H/oRrHEO/DkPX9RT/gIq/Bz/kch/wBe8n9K6f45NjRtOX1uSf8AxyuY+Dv/ACOS/wDXvJ/Sul+On/IM0v8A6+H/APQaeBduHqnqEP4LPPPCC7/Fmkr/ANPcf86971/VINH0qbUbkOYoQCwQZPJx/WvB/BP/ACN+k/8AX0n869e+Kuf+EG1DH+x/6GKvharKhl9erHda/gOg+WDZSi+JfhxvvNcx/WKuzt5VmhSVSdrqGX6EZr5jI4r6Y00AWFuB0ESf+givX4ZznEZk5qtbQ0oVXO9yxRRRX1p0BRRRQAV598QPjB4H8DeIYdC8RahNb300SSoiwMwKsxUHI9xXoB6V8Mft4h/+F06f5Wd/9jwbcevmPj9aqKuxN2PpH4g/H/4deDNUfSr/AFOW8vo/9bDZx+Z5Z9GPQH2q58Mfjb4D+IOoHTdF1F4tQ27ltbpPLdwOu31/CuI+HH7M3gi28N21x4utJtY1q6jE13LLMwVXYZKgD0z1PWvnf9pHwTD8IvivZv4Subm0glt1vrIhyXt3DFWAbuMjj61fLF6EuTPrT4hfH74c+C9Uk0u/1SS8vojiWGzTzPLPox6A+1SfDb47/D7x3qyaRpeoy22oSf6q3u4/LaX2U9CfauC+EP7Nfg4+ELLVfGdvNrGsahCt1OXmYJGXG7aMdTg8k968N/aj+H9h8J/iJpN54Uea1tbmEXlshckwSxvzg9cdD+dLli9EF3ufoBnjNeafEf44fD3wJfNp2r6sZ79fv2tonmOn+9jgH2rL+NPxJu/C/wCz9H4stGCapqVnbx2p/uSzICW/AbjXz1+y/wDBG3+JSXnjHxhcXMumC5aOOMOQ93L1dmbrgE/iaUYrdjb7H0B4Q/aS+GHiLUo9PXUp9NmlbbGb2Ly0Y+m7oPxroT8ZPAn/AAsBfAv9pSnW2uhaiIQnaZCMgbumMd643xj+y/8ADfVtFmttGspdHvth8m4jlZgG7blPUV8u/CDTtV0j9pzw/pGuM7ajZa4tvcFm3EsmV69xgDHtinZPYLtbn3V8SfiJ4Y+HthaX3ii7ktYbuUxQlIi+WAyRx7Vz2vfHX4caN4Z07X7vW8w6lF5tpBHGWmkTJG7Z1AyD1ry//goMP+KK8L/9hOX/ANFVz/7MfwD0Dxb4JtfGPjU3F+LsMljaCUqkcSMQCccnJBwOlCirXYX1sepeHP2nfhfrGpR2L317pzSMFWW7g2x5Pqw6V7TBNFPCksMiyRuoZXU5DA9CD6V8hftYfAzwj4S8Af8ACWeFLR7BrW4jiuYPMLI6OdueehBx+dekfsheLJrr9n03mrys6aHLcQl2OSYY1DgfgDik0rXQJ9Gem/ET4h+E/AVgt34m1aK08z/VRD5pZP8AdUcn615pZftU/C64vBBJNqluhOPOktflHucHNfN/g7SNe/aL+Nt3capfSQ2h3XFxIORbWwOEjQdieB9cmvqBf2Z/hP8A2Z9jOhzl9uPtH2lvMz656Zp2itwu3sb/AIr+Nvw68NWWmX2oa6slrqcTS2ktshlV1U4PI6EE9DU/jb4weB/Btvo11r2oTQRavb/arMrAzb4xt5OOn3hXw3+0L8Or74ZeLh4fN7Nd6RLG1zpryHojHDDHQMCMH14NfZz/AAs8H/EXwR4Nn8U2Mt09lpMCQFJim0OiFunXoKHFIE2z5E+GfjTw3pX7S8njbWZ2/sY6le3KymMsf3m/y22+vzCvtL4cfF7wR4/1ebSvDOoTXN1BB57q8LIAmQM5Pua+MPhV4H8P69+0rL4K1K1eTRlv7+ERCQg7Yg+z5uvG0V9nfDj4QeCPh/rE2reGdPmtrqeDyJGednBTIOMH3ApzsKFz0GiiisiyK6O23lf0Rj+lfM0h3O7erE/rX0hr0wg0W+mY4CW7nP8AwE182L0zX53xxO8qUfU48V0Pb/hCm3wTAf70sjf+PV5h8Q23eN9W/wCu+P8Ax0V638NIfJ8EaapGC0Zc/ixNeO+NX8zxhqz/APT24/I4qOIFyZTh4+n5Cq6U4o7r4Er+41dv+mkQ/Q1lfGz/AJGW2/69B/6Ea2fgWv8AxLtUf1uEH/jtY3xs/wCRmtf+vQf+hGjEq3DsPX9Rz/gIq/Bv/kc1/wCvaT+ldL8dB/xKdNP/AE8N/wCg1zXwc/5HMf8AXtJ/Sur+OCE+HrKT+7dgfmpowCvw9U9X+gofwWeceDSF8W6ST/z9x/zr2H4orv8AA2pAdlVvyYV4x4bcReI9MlP8N1Gf/HhXufjuHz/CGqx/9OzEfhz/AEo4ZXPluIj/AFsOhrCR89t9w/SvpXR3Emk2bj+KBD/46K+aT9w+4r6K8GTCfwppcoOd1sn6DFHBE7VqsfIWF3aNeiiiv0c7QooooAQ9DXw9+3H/AMl10j/sGW3/AKNavuI9DXxz+2L4O8V698ZtL1DRPDupahaR6fbo81vAXRWErEgkegq4bkyWh9hwD9yn+6P5V8Wf8FAQP+FjeHf+wU3/AKNNfacPEKAjnaP5V8kftv8AhHxT4i8eaDdaD4f1HU4YtMZJJLaEuFbzScEjviiL1B7H1P4WH/FM6V/15Qf+i1r5K/4KGAf8JD4U/wCvG4/9DWvrjw2jxeHtNilRkdLOFWUjkEIuRXzD+3V4V8TeJNd8MyaBoOoaokFnOsrW0JcIS4IBxRH4glsT/tS2dxcfsseDrqJWaO0Ni8uOytAVBP4kV2P7EOqWV58ELawt5E+02F7PHcIDypZtyk/UH9K7y08J2fiX4L6f4S1+2dYrnR4LedGGHiYRryPRlYZ+or5Bu/B3xk+A3i24vfDcV5dWLnaLq1hM0Fyg6CRB0P8ALsapaqwtU7n3tkd6+ELbVLHWf234NR06RJbWTxIqpIhyr7V2kj8Qa2m+Iv7Q/wAULc+HNJ0aTT4rgeXPcQWjW4Cng7pG+6PpzWN8NfhR4w8IftF6FBJouo3enadqse/UltyIXG3LOD/dySM0JWBu56l/wUF/5Erwt/2E5P8A0VXqH7LH/JAfCR/6dG/9GNXBftx+Hde8R+EfDkGgaPe6nLDqEjypbRFyimPGTjtXo/7N2nX+k/BHwxp2p2c1neQWpWWCZdrod7cEdql/CNfEc/8Atmj/AIx91z/rva/+jlrzr9lmzn1D9lbxnY2pPnTzXyR7euTAuK9S/ay0rU9b+B2sabpFhcX95JNblIIE3OwEoJwPYVgfsV6DrOgfCm9sNd0q6065fVpZFiuYyjFCiAHB7cGiL90X2jx//gn9qllaeOde0m4dI7u9sI2gDHBby3yyj3wc/hX2qSAMivi345/Avxd4N8cSeOPhnFdS2ZnN0kdmf39lITkhR/EnJxjscGq+n/HT4/3tuui2nh6Se+I8sTf2Uwlz0zzxmqkuZ3Q07aFn/goFqllc+MPD2lQyI93Z2Mr3Cr1QOw2g/UAmvrT4bf8AIgeGv+wZa/8Aota+EPiZ8Hvion2LXta0/U9b1vWFlnvFhQzNb4ICq7DjcR2HA6V94+AIpbXwR4ft7mNopYtPt0kRxgqwjUEH3FKe1hR3Z8Y/Ar/k8+f/ALCmqfykr7qHQV8Z/BnwZ4t0/wDa0m1y+8Oalb6WdR1JxdyQERFXEm07vQ5GK+zB0pT3HEKKKKgo5n4m3ItvBWotnmRBEPqxArwQ524HJPSvW/jjeiPSbKwDfNPMZGH+yo/xNeZ+HrNr/XrCyUZ864RT9M5P6V+XcUz+sZnGkulkcGIfNUSPoHw7bm00KwtiMGO3RSPfAr5+8Qyebr+oyA5DXUhH/fRr6OchIi3YAmvma5fzLmaTP3pGb8yTXdxilTw9CkuheJ0SR638D0x4evZP712fxwo/xrnvjX/yM1t/16j/ANCNdf8ABuLy/BkbnrJPI364/pXIfGv/AJGa2/69R/6EavMYcnD9NegT/goq/Bz/AJHMf9e0n9K7T40Ju8II39y6jP6Ef1ri/g3/AMjmv/XtJ/SvQfivF5vga+9YzG/5MP8AGjKIc+Q1V6hSV6LPEbJ/Lv7WT+7Mjfkwr6Q1GIXOnXEPUSxMuPqDXzUTj5h25r6WsJPNsLeXP3okb8wDWXBbUoVqfcMLs0fNTqUZkbqrEEfQ17f8JLrz/BVqhOTA7xH2wcj+deS+MrQ2HizU7XbgLcMy/RvmH867r4G3uYdR05m+46zKPYjB/kK4eGp/Vc1lSl1uiKGlSx6fRRRX6md4UUUUAFIRS0UAApMUtFABSYpaKADFIVBGCOKWigBqqqjAAA9qXApaKAExS4oooAKMUUUAJgHrTRGgOQoB9cU+igBMCjApaKAEwKWiigApG6UtFAHk/wAXNK1y/wBZS7t9Pmns4YQitH8xznJ4HNZvwg06Sbxc1xLG6CziZiGBBDNwP617TtFRiGNZGkVFV2HLAcn8a+ZqcN05Y9Yzm63sYOgnPmKfiKb7PoN9NnGy2cg/8BNfN68KM19HeJbCXVNCu9PhlWF7iMoHYZAzXlN58MPEESnyJrO4HbDlT+oryuLMvxWLq03Rg2kZ4iEpNWPRPhpCIfBOmrjG6Mv+ZJrgfjZ/yM1t/wBeo/8AQjXquh2v2HR7SzIwYIVQgeoHNeefFbw/rOq6/BPp+ny3ES24QsuMA5PFdueYSo8ojShG7Vi6sX7OyMP4Of8AI5r/ANe0n9K9R8cQfaPCWqRYzm2Y/kM/0rg/hf4c1vS/FIur/TpYIfIdd7EYycYHBr1C/gFzYz27dJY2Q/iMUuHcLUjlc6U4tN3CjF+zsz5nPKfUV9DeCpzc+E9LmJyTbID+Ax/SvL7T4YeIpOJZbOBc4G5yxx9AK9S8IaXNougW2mTzrO8AI3qMA856fjXBwpl2KwmIm6sGotEYeEot3R5r8adPePxDa30UbMLqHYdozllP+BFL8KdI12z8RR376fPDZvG0cjSDbkHkcHk8gV65JDG7K7RqzL90kcj6U8AV7H+rdN4/65zW1vY09gufmuOHSiiivpjcKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigBMCgr3paKAE2iloooAMUUUUAFFFFABRRRQB//Z" alt="مناف"></div>
+      <div class="brandtxt">
+        <h1>السجلات الأمنية الرقمية</h1>
+        <span class="en">Manaf · Security Department · Digital Logs</span>
+      </div>
+      <button class="btn syncchip" id="syncchip" data-act="syncNow" hidden></button><button class="btn userchip" id="userchip" data-act="logout" hidden></button><div class="shiftpill" id="shiftpill"><span class="dot"></span><span class="lbl">الوردية الحالية:</span> <b id="pillname">—</b> <span class="mono" id="pilltime"></span></div>
+    </div>
+    <nav class="tabs" aria-label="الأقسام">
+      <div class="wrap" id="tabs"></div>
+    </nav>
+  </header>
+  <div class="wrap" id="banner"></div>
+  <main class="wrap" id="view"></main>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form</div></footer>
+</div>
+<div id="modal" hidden dir="rtl"></div>
+<div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
+<form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه</div></div></div>
+<div id="toast" aria-live="polite"></div>
+
+<script>
+"use strict";
+document.documentElement.lang="ar";document.documentElement.dir="rtl";
+const LOGO=document.querySelector(".logo img").getAttribute("src");
+
+/* ---------- constants (from the controlled forms) ---------- */
+const FORMS={
+  handover:{code:"MQF-SEM/37-1",title:"سجل تسليم واستلام الوردية الأمنية",en:"Security Shift Handover Log",issue:"9/9/2026",ver:"01/00"},
+  patrol:{code:"MQF-SEM/37-5",title:"سجل الدوريات الأمنية",en:"Security Patrol Log",issue:"9/9/2026",ver:"01/00"},
+  visits:{code:"MQF-SEM/37-3",title:"سجل الزوار والمقاولين والموردين",en:"Visitor / Contractor / Supplier Register",issue:"9/9/2026",ver:"01/00"},
+  exits:{code:"MQF-SEM/37-6",title:"سجل استئذان وخروج الموظفين",en:"Employee Permission / Exit Log",issue:"9/9/2026",ver:"01/00"}
+};
+const AREAS=[
+  {k:"perimeter",ar:"المحيط / السور",en:"Perimeter / Fence"},
+  {k:"gates",ar:"البوابات / المواقف",en:"Gates / Parking"},
+  {k:"internal",ar:"المناطق الداخلية",en:"Internal Areas"},
+  {k:"warehouse",ar:"مداخل المستودعات / المرافق",en:"Warehouse / Facility Entrances"},
+  {k:"mezzanine",ar:"الميزانين",en:"Mezzanine"},
+  {k:"blindspots",ar:"مناطق ضعف تغطية الكاميرات",en:"CCTV Blind Spots"}
+];
+const ITEMS=[
+  {k:"general",ar:"الحالة الأمنية العامة للموقع",en:"General Site Security Status"},
+  {k:"gate",ar:"حالة البوابة / المدخل العامل",en:"Operating Gate / Entrance Status"},
+  {k:"visitors",ar:"الزوار / المقاولون المتواجدون داخل الموقع",en:"Visitors / Contractors On Site"},
+  {k:"incidents",ar:"الحوادث / المخالفات الأمنية المفتوحة",en:"Open Security Incidents / Violations"},
+  {k:"outstanding",ar:"بنود المتابعة القائمة",en:"Outstanding Follow-up Items"},
+  {k:"cctv",ar:"حالة كاميرات المراقبة / الأعطال",en:"CCTV Status / Faults"},
+  {k:"keys",ar:"المفاتيح / المعدات الأمنية تحت العهدة",en:"Keys / Security Equipment in Custody"},
+  {k:"instructions",ar:"تعليمات أمنية مؤقتة / خاصة",en:"Temporary / Special Security Instructions"}
+];
+const ST_LBL={ok:"سليم",remark:"توجد ملاحظة",na:"لا ينطبق"};
+const ST_EN={ok:"OK",remark:"Remark",na:"N/A"};
+const DEFAULT_SETTINGS={
+  shifts:[
+    {id:"A",name:"الوردية الصباحية",start:"08:00",end:"16:00"},
+    {id:"B",name:"الوردية المسائية",start:"16:00",end:"00:00"},
+    {id:"C",name:"الوردية الليلية",start:"00:00",end:"08:00"}
+  ],
+  guards:[],startDate:""
+};
+const ICONS={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>',
+  patrol:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  handover:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3"/><path d="M17 17H6l3 3"/></svg>',
+  records:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  gate:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-6 9 6v12"/><path d="M8 21v-7h8v7"/><path d="M12 14v7"/><path d="M2 21h20"/></svg>',
+  download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>'
+};
+
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hhmm=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const toMin=s=>{const[h,m]=String(s||"0:0").split(":").map(Number);return (h||0)*60+(m||0)};
+const addDays=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return ymd(d)};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const fmtG=new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+const fmtGs=new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn",{weekday:"short",day:"numeric",month:"short"});
+const fmtH=new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn",{day:"numeric",month:"long",year:"numeric"});
+const dG=s=>fmtG.format(new Date(s+"T12:00:00"));
+const dGs=s=>fmtGs.format(new Date(s+"T12:00:00"));
+const dH=s=>{try{return fmtH.format(new Date(s+"T12:00:00"))}catch(e){return ""}};
+const isoNow=()=>new Date().toISOString();
+const fmtStamp=iso=>{if(!iso)return "";const d=new Date(iso);return `${ymd(d)} ${hhmm(d)}`};
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}};
+const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+function toast(msg,kind){const t=document.createElement("div");t.className="toast"+(kind?" "+kind:"");t.textContent=msg;$("#toast").appendChild(t);setTimeout(()=>t.remove(),3200)}
+
+/* ---------- Google backend (standalone mode) ---------- */
+const HAS_RUN=(typeof google!=="undefined"&&google.script&&google.script.run)?true:false;
+const EXEC_URL="https:\/\/script.google.com/macros/s/AKfycbw2zG-gtAgq1KRD63FIvci0it44OjCIq4-7LevxlfKCY4Af80H-nUpovngxnvxUmHtW/exec";
+const GAS=HAS_RUN||/(^|\.)manaf-safety\.com$/.test(location.hostname)||!!window.__FORCE_FETCH;
+const AUTH={pin:lsGet("sec-pin"),role:null,name:null};
+function mapErr(raw,action){const m=String(raw||"").replace(/^(Exception|Error):\s*/,"");
+  const code=/^PERM/.test(m)?"perm":/^AUTH/.test(m)?"auth":/^NOTFOUND/.test(m)?"invalid_argument":/NetworkError|HTTP 0|Failed to fetch|network|timed? ?out/i.test(m)?"net":"unavailable";
+  return{code,message:m.replace(/^[A-Z]+:\s*/,"")}}
+function gasCall(action,args,pin,at){
+  if(HAS_RUN)return new Promise((res,rej)=>{google.script.run.withSuccessHandler(r=>{try{res(JSON.parse(r))}catch(e){res(r)}}).withFailureHandler(e=>rej(mapErr((e&&e.message)||e,action))).api(action,JSON.stringify(args),pin,at||"")});
+  const ctl=typeof AbortController!=="undefined"?new AbortController():null;const tm=setTimeout(()=>ctl&&ctl.abort(),45000);
+  return fetch(EXEC_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,args,pin,at:at||""}),redirect:"follow",cache:"no-store",signal:ctl?ctl.signal:undefined})
+    .catch(()=>{throw{code:"net",message:"لا يوجد اتصال"}})
+    .then(r=>{if(!r.ok)throw{code:"net",message:"HTTP "+r.status};return r.text()})
+    .then(t=>{let j;try{j=JSON.parse(t)}catch(e){throw{code:"net",message:"لا يوجد اتصال"}}if(j.err)throw mapErr(j.err,action);try{return JSON.parse(j.ok)}catch(e){return j.ok}})
+    .finally(()=>clearTimeout(tm));
+}
+function gas(action,...args){return gasCall(action,args,AUTH.pin).then(r=>{NET.ok();return r},e=>{if(e.code==="net")NET.fail();else NET.ok();if(e.code==="auth"&&action!=="login")onAuthLost();throw e})}
+
+/* ---------- offline store: every record lives on the phone, writes wait in an outbox ---------- */
+const NET={online:true,okAt:0,fail(){if(this.online){this.online=false;renderSync();renderBanner()}},ok(){this.okAt=Date.now();if(!this.online){this.online=true;renderSync();renderBanner();STORE.sync()}}};
+const IDB=(()=>{let p=null;const open=()=>p||(p=new Promise((res,rej)=>{try{const r=indexedDB.open("manaf-sec",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}));
+  const run=(mode,fn)=>open().then(db=>new Promise((res,rej)=>{const t=db.transaction("kv",mode);const q=fn(t.objectStore("kv"));t.oncomplete=()=>res(q&&q.result);t.onerror=t.onabort=()=>rej(t.error)}));
+  return{get:k=>run("readonly",s=>s.get(k)).catch(()=>{const v=lsGet("idb-"+k);return v==null?undefined:v}),
+    set:(k,v)=>run("readwrite",s=>s.put(v,k)).then(()=>true).catch(()=>{try{localStorage.setItem("idb-"+k,JSON.stringify(v));return true}catch(e){return false}})}})();
+const clj=v=>v==null?v:JSON.parse(JSON.stringify(v));
+function dmerge(a,b){const out=clj(a||{});Object.keys(b||{}).forEach(k=>{const v=b[k];if(v&&typeof v==="object"&&!Array.isArray(v)&&out[k]&&typeof out[k]==="object"&&!Array.isArray(out[k]))out[k]=dmerge(out[k],v);else out[k]=clj(v)});return out}
+const qok=(d,[f,op,v])=>{const x=d[f];switch(op){case">=":return x>=v;case"<=":return x<=v;case">":return x>v;case"<":return x<v;case"==":return x===v;case"!=":return x!==v;default:return true}};
+const STORE=(()=>{
+  const docs=new Map();let outbox=[],rejected=lsGet("sec-rejected")||[],syncing=false,timer=null,listeners=new Set(),dirty=null;
+  const ready=(async()=>{try{const d=await IDB.get("docs");const cut=addDays(ymd(new Date()),-75);
+      (d||[]).forEach(([p,e])=>{if(e&&e.data&&e.data.date&&e.data.date<cut)return;docs.set(p,e)});
+      outbox=(await IDB.get("outbox"))||[];outbox.forEach(o=>o.inflight=false)}catch(e){console.warn(e)}
+    changed();renderSync();setTimeout(sync,500)})();
+  const saveDocs=()=>{clearTimeout(dirty);dirty=setTimeout(()=>IDB.set("docs",[...docs.entries()]),800)};
+  const saveOutbox=()=>IDB.set("outbox",outbox.map(o=>({...o,inflight:false})));
+  function changed(){listeners.forEach(f=>{try{f()}catch(e){console.warn(e)}})}
+  function view(path){let e=docs.get(path);e=e?{exists:!!e.exists,data:e.data}:{exists:false,data:null,unknown:true};
+    for(const o of outbox){if(o.path!==path)continue;
+      if(o.op==="set")e={exists:true,data:clj(o.data)};else if(o.op==="update")e={exists:true,data:dmerge(e.data||{},o.data)};else e={exists:false,data:null}}
+    return e}
+  function query(col,filters){const pre=col+"/",paths=new Set();docs.forEach((e,p)=>{if(p.startsWith(pre))paths.add(p)});outbox.forEach(o=>{if(o.path.startsWith(pre))paths.add(o.path)});
+    const rows=[];paths.forEach(p=>{const v=view(p);if(v.exists&&v.data&&filters.every(f=>qok(v.data,f)))rows.push({id:p.slice(pre.length),data:v.data})});return rows}
+  function putDoc(path,r,full){if(!r)return;const old=docs.get(path);
+    if(!full&&old&&old.full&&r.exists&&old.data&&r.data&&old.data.updatedAt===r.data.updatedAt)return;
+    docs.set(path,{exists:!!r.exists,data:r.exists?r.data:null,full:!!full})}
+  function putQuery(col,filters,rows){const pre=col+"/",seen=new Set();(rows||[]).forEach(r=>{seen.add(pre+r.id);putDoc(pre+r.id,{exists:true,data:r.data},false)});
+    [...docs.keys()].forEach(p=>{if(p.startsWith(pre)&&!seen.has(p)){const e=docs.get(p);if(e&&e.exists&&e.data&&filters.every(f=>qok(e.data,f))&&!outbox.some(o=>o.path===p))docs.delete(p)}})}
+  function apply(reqs,res){res.forEach((r,i)=>{if(!r||r.err)return;const q=reqs[i];if(q[0]==="get")putDoc(q[1],r.ok,true);else if(q[0]==="query")putQuery(q[1],q[2]||[],r.ok)});saveDocs();changed()}
+  async function write(path,op,data){await ready;
+    const o={k:Math.random().toString(36).slice(2)+Date.now().toString(36),path,op,data:op==="delete"?null:clj(data),at:new Date().toISOString(),pin:AUTH.pin,tries:0};
+    const last=[...outbox].reverse().find(x=>x.path===path);
+    if(last&&!last.inflight&&path.startsWith("patrols/")&&last.op===op&&op!=="delete"){last.data=op==="set"?o.data:dmerge(last.data,o.data);last.at=o.at}
+    else outbox.push(o);
+    const ok=await saveOutbox();if(!ok)toast("تعذّر الحفظ في الجوال — المساحة ممتلئة؟","bad");
+    changed();renderSync();
+    if(!NET.online&&Date.now()-(STORE._warned||0)>60000){STORE._warned=Date.now();toast("📴 حُفظ في الجوال — يُرسل تلقائياً عند توفر النت")}
+    sync()}
+  async function sync(){await ready;if(syncing||!outbox.length){renderSync();return}syncing=true;renderSync();
+    while(outbox.length){const o=outbox[0];if(!o.pin){outbox.shift();continue}o.inflight=true;
+      try{await gasCall(o.op,o.op==="delete"?[o.path]:[o.path,o.data],o.pin,o.at);
+        outbox.shift();const v=docs.get(o.path);if(o.op==="delete")docs.delete(o.path);else{docs.set(o.path,{exists:true,data:o.op==="set"?clj(o.data):dmerge((v&&v.data)||{},o.data),full:!!(v&&v.full)})}
+        await saveOutbox();saveDocs();NET.ok()}
+      catch(e){o.inflight=false;
+        if(e.code==="net"){NET.fail();break}
+        if(e.code==="auth"){if(AUTH.pin&&AUTH.pin!==o.pin){outbox.forEach(x=>{if(x.pin===o.pin)x.pin=AUTH.pin});await saveOutbox();continue}NET.ok();break}
+        if(e.code==="perm"||e.code==="invalid_argument"||++o.tries>=6){outbox.shift();await saveOutbox();
+          rejected.unshift({at:o.at,path:o.path,msg:e.message,who:o.pin===AUTH.pin?AUTH.name:""});rejected=rejected.slice(0,40);lsSet("sec-rejected",rejected);
+          toast("لم يُقبل سجل محفوظ: "+(e.message||"خطأ"),"bad");NET.ok()}
+        else{NET.ok();break}}}
+    syncing=false;changed();renderSync();
+    if(!outbox.length){if(STORE._hadPending){STORE._hadPending=false;toast("✓ تم إرسال كل السجلات المحفوظة")}if(S.db&&S.db.refresh)S.db.refresh()}
+    else{STORE._hadPending=true;clearTimeout(timer);timer=setTimeout(sync,NET.online?8000:20000)}}
+  window.addEventListener("online",()=>setTimeout(sync,800));
+  setInterval(()=>{if(outbox.length)sync()},30000);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")sync()});
+  return{ready,view,query,putDoc,apply,write,sync,on:f=>{listeners.add(f);return()=>listeners.delete(f)},
+    hasCol:col=>{const pre=col+"/";for(const p of docs.keys())if(p.startsWith(pre))return true;return outbox.some(o=>o.path.startsWith(pre))},
+    pending:()=>outbox.length,isSyncing:()=>syncing,rejected:()=>rejected,lastPendingAt:()=>outbox.length?outbox[0].at:null}
+})();
+function makeGasDb(){
+  const subs=new Set();let alive=true,timer=null,inflight=false,again=false;
+  const snap=(id,r)=>({id,exists:!!(r&&r.exists),data:()=>(r&&r.exists)?clj(r.data):undefined,metadata:{fromCache:!NET.online,hasPendingWrites:false}});
+  const qsnap=rows=>{const docs=(rows||[]).map(r=>snap(r.id,{exists:true,data:r.data}));return{docs,size:docs.length,empty:!docs.length,docChanges:()=>[],metadata:{}}};
+  const compute=s=>s.req[0]==="get"?STORE.view(s.req[1]):STORE.query(s.req[1],s.req[2]||[]);
+  function deliver(force){if(!alive)return;subs.forEach(s=>{if(!s.served&&s.req[0]==="query"&&!STORE.hasCol(s.req[1]))return;const v=compute(s);if(s.req[0]==="get"&&v.unknown&&!s.served)return;const j=JSON.stringify(v);if(!force&&j===s.last)return;s.last=j;s.served=true;try{s.next(v)}catch(e){console.warn(e)}})}
+  const off=STORE.on(()=>deliver(false));
+  const schedule=ms=>{clearTimeout(timer);timer=setTimeout(flush,ms==null?30:ms)};
+  async function flush(){
+    if(!alive||!AUTH.pin)return;if(inflight){again=true;return}
+    const reqs=[],seen={};subs.forEach(s=>{const k=JSON.stringify(s.req);if(!seen[k]){seen[k]=1;reqs.push(s.req)}});
+    if(!reqs.length)return;inflight=true;
+    try{const res=await gas("batch",reqs);if(res.some(r=>r&&r.err&&/^AUTH/.test(r.err)))onAuthLost();else{STORE.apply(reqs,res);subs.forEach(s=>{if(!s.served){s.served=true;s.last=JSON.stringify(compute(s));s.next(compute(s))}})}}
+    catch(e){if(e&&e.code==="net")subs.forEach(s=>{if(!s.served){s.served=true;const v=compute(s);s.last=JSON.stringify(v);s.next(v)}});else if(e&&e.code!=="auth")console.warn(e)}
+    inflight=false;if(again){again=false;schedule(60)}
+  }
+  function sub(req,next){const s={req,next,last:null,served:false};subs.add(s);STORE.ready.then(()=>{if(!alive||!subs.has(s))return;if(s.req[0]==="query"&&!STORE.hasCol(s.req[1]))return;const v=compute(s);if(s.req[0]==="get"&&v.unknown)return;s.served=true;s.last=JSON.stringify(v);next(v)});schedule();return()=>subs.delete(s)}
+  async function getDoc(path){await STORE.ready;try{const r=await gas("get",path);STORE.putDoc(path,r,true);STORE.apply([],[])}catch(e){if(e.code!=="net")throw e}return STORE.view(path)}
+  function docRef(path){const id=path.split("/").pop();return{path,id,
+    get:async()=>snap(id,await getDoc(path)),
+    set:d=>STORE.write(path,"set",d),
+    update:d=>STORE.write(path,"update",d),
+    delete:()=>STORE.write(path,"delete",null),
+    onSnapshot:(next)=>sub(["get",path],r=>next(snap(id,r)))}}
+  function q(col,filters){
+    return{path:col,where:(f,o,v)=>q(col,[...filters,[f,o,v]]),orderBy:()=>q(col,filters),limit:()=>q(col,filters),
+      get:async()=>{await STORE.ready;try{const rows=await gas("query",col,filters);STORE.apply([["query",col,filters]],[{ok:rows}])}catch(e){if(e.code!=="net")throw e}return qsnap(STORE.query(col,filters))},
+      onSnapshot:(next)=>sub(["query",col,filters],rows=>next(qsnap(rows))),doc:id=>docRef(col+"/"+id)}}
+  function warm(paths,queries){const reqs=paths.map(p=>["get",p]);(queries||[]).forEach(([c,f])=>reqs.push(["query",c,f]));gas("batch",reqs).then(res=>STORE.apply(reqs,res)).catch(()=>{})}
+  const iv=setInterval(()=>{if(alive&&document.visibilityState==="visible")schedule(0)},25000);
+  const vis=()=>{if(alive&&document.visibilityState==="visible")schedule(0)};document.addEventListener("visibilitychange",vis);
+  const onl=()=>schedule(500);window.addEventListener("online",onl);
+  return{doc:docRef,collection:c=>q(c,[]),warm,refresh:()=>schedule(0),stop(){alive=false;off();clearInterval(iv);clearTimeout(timer);subs.clear();document.removeEventListener("visibilitychange",vis);window.removeEventListener("online",onl)}};
+}
+function renderSync(){const c=document.getElementById("syncchip");if(!c)return;if(!GAS){c.hidden=true;return}
+  const n=STORE.pending();let h="",cls="";
+  if(n&&!NET.online){h=`📴 <b>${n}</b><span class="lbl"> بانتظار النت</span>`;cls="warn"}
+  else if(n){h=`⏳ <b>${n}</b><span class="lbl"> جارٍ الإرسال</span>`;cls="info"}
+  else if(!NET.online){h=`📴<span class="lbl"> بدون اتصال</span>`;cls="muted"}
+  c.hidden=!h;c.className="btn syncchip "+cls;c.innerHTML=h;c.title=n?"سجلات محفوظة في الجوال لم تُرسل بعد — اضغط للمحاولة الآن":"لا يوجد اتصال بالإنترنت";
+}
+/* PINs that signed in successfully on this phone can sign in again without internet */
+async function pinKey(pin){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("manaf-sec|"+pin));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return "p:"+pin}}
+async function rememberPin(pin,who){const k=await pinKey(pin);const m=lsGet("sec-known")||{};m[k]={role:who.role,name:who.name};lsSet("sec-known",m)}
+async function knownPin(pin){const k=await pinKey(pin);return(lsGet("sec-known")||{})[k]||null}
+function showLogin(msg){$("#loginlogo").src=LOGO;$("#login").hidden=false;$("#loginerr").textContent=msg||"";setTimeout(()=>$("#pin")?.focus(),60)}
+function hideLogin(){$("#login").hidden=true}
+function renderUser(){const c=$("#userchip");if(!GAS||!AUTH.name){c.hidden=true;return}c.hidden=false;c.innerHTML=`👤 <b>${esc(AUTH.name)}</b> <span class="lbl muted">· خروج</span>`;c.title="تسجيل الخروج"}
+async function gasBoot(){
+  S.dl={save:async({filename,data})=>{const blob=data instanceof Blob?data:new Blob([data]);const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);return{status:"saved"}}};
+  if(!AUTH.pin){showLogin();return}
+  const cached=lsGet("sec-who");
+  if(cached&&cached.name){startGasSession(cached);gas("login").then(r=>{lsSet("sec-who",r);rememberPin(AUTH.pin,r);if(r.name!==AUTH.name||r.role!==AUTH.role)startGasSession(r)}).catch(e=>{if(e.code==="auth")onAuthLost()});return}
+  try{const r=await gas("login");lsSet("sec-who",r);rememberPin(AUTH.pin,r);startGasSession(r)}catch(e){if(e.code==="auth"){lsSet("sec-pin",null);AUTH.pin=null;showLogin(e.message)}else showLogin("تعذّر الاتصال — تأكد من الإنترنت ثم حاول مرة أخرى")}
+}
+function startGasSession(r){
+  AUTH.role=r.role;AUTH.name=r.name;S.uid=r.name;S.isOwner=r.role==="admin";S.canWrite=true;
+  S.recent={handovers:new Map(),patrols:new Map(),loaded:{h:false,p:false}};HSel.date=null;PSel.date=null;SETF=null;
+  if(S.db&&S.db.stop)S.db.stop();S.db=makeGasDb();hideLogin();renderUser();startSubs(S.db);
+  setTimeout(()=>{try{const c=currentShift(),pv=prevShiftOf(c.date,c.shift.id),a=docId(c.date,c.shift.id),b=docId(pv.date,pv.shift.id);const to=ymd(new Date()),fr=addDays(to,-30),f=[["date",">=",fr],["date","<=",to]];S.db.warm(["patrols/"+a,"handovers/"+a,"handovers/"+b],[["handovers",f],["patrols",f]])}catch(e){}},400);
+}
+function onAuthLost(){const p=AUTH.pin;if(p)pinKey(p).then(k=>{const m=lsGet("sec-known")||{};delete m[k];lsSet("sec-known",m)});lsSet("sec-pin",null);lsSet("sec-who",null);AUTH.pin=null;doLogout("انتهت الجلسة أو تغيّر الرقم السري — ادخل مرة أخرى")}
+function doLogout(msg){stopGateSub();G.roster=null;G.rosterFetched=false;if(S.db&&S.db.stop)S.db.stop();S.db=null;S.ready=false;AUTH.name=null;AUTH.role=null;S.isOwner=false;stopPatrolSub();stopHandoverSub();stopRecordsSub();closeModal&&!$("#modal").hidden&&closeModal();renderUser();showLogin(msg)}
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="loginform")return;e.preventDefault();
+  const pin=$("#pin").value.trim();if(!pin)return;const b=e.target.querySelector("button");b.disabled=true;$("#loginerr").textContent="جارٍ التحقق…";AUTH.pin=pin;
+  try{const r=await gas("login");lsSet("sec-pin",pin);lsSet("sec-who",r);rememberPin(pin,r);$("#pin").value="";startGasSession(r)}
+  catch(err){
+    if(err.code==="net"){const k=await knownPin(pin);
+      if(k){lsSet("sec-pin",pin);lsSet("sec-who",k);$("#pin").value="";startGasSession(k);toast("📴 دخلت بدون اتصال — السجلات تُحفظ في الجوال")}
+      else{AUTH.pin=null;$("#loginerr").textContent="لا يوجد اتصال بالإنترنت — أول دخول بهذا الرقم على هذا الجوال يحتاج إنترنت"}}
+    else{AUTH.pin=null;$("#loginerr").textContent=err.message||"تعذّر الدخول"}}
+  finally{b.disabled=false}
+});
+function guardsCardGas(){
+  return `<div class="card"><div class="cardhead"><div><h3>أفراد الأمن والأرقام السرية</h3><div class="en">Each guard signs in with their own PIN</div></div><span class="chip brand">${SETF.guards.length}</span></div>
+    <div>${SETF.guards.length?SETF.guards.map((g,i)=>`<div class="gprow"><div class="field"><label>الاسم</label><input type="text" id="gp-name-${i}" data-sf="guards.${i}.name" value="${esc(g.name||"")}"></div><div class="field"><label>الرقم السري</label><input type="text" inputmode="numeric" id="gp-pin-${i}" data-sf="guards.${i}.pin" value="${esc(g.pin||"")}" class="mono"></div><button class="btn ghost" data-act="gpDel" data-i="${i}">حذف</button></div>`).join(""):'<div class="empty"><b>لا يوجد حراس بعد</b>أضف كل حارس برقم سري خاص به (4 أرقام أو أكثر).</div>'}</div>
+    <div class="row" style="margin-top:10px"><button class="btn" data-act="gpAdd">+ إضافة حارس</button><button class="btn ghost" data-act="gpGen">توليد أرقام للفارغ</button></div>
+    <p class="muted" style="font-size:.82rem;margin-bottom:0">بعد الحفظ أعطِ كل حارس رقمه. لإيقاف حارس احذفه من القائمة فيتوقف دخوله فوراً.</p></div>`;
+}
+function gasHelpCard(){
+  return `<div class="card"><h3>طريقة عمل النظام</h3><div class="en" style="margin-bottom:8px">How it works</div>
+    <ol class="steps"><li>أرسل رابط التطبيق للحراس، وكل واحد يضيفه للشاشة الرئيسية في جواله.</li><li>كل حارس يدخل برقمه السري، وكل سجل يُحفظ باسمه تلقائياً.</li><li>الحارس يسجّل فقط: لا يعدّل ولا يحذف بعد الإرسال، ولا يسجّل ورديات قديمة — هذا مفروض من الخادم وليس من الشاشة فقط.</li><li>كل البيانات تُحفظ في جدول Google Sheets في حسابك أنت، ويمكنك فتحه في أي وقت.</li></ol>
+    <div class="row" style="margin-top:12px;align-items:center"><button class="btn" data-act="openSheet">فتح جدول البيانات</button><span id="sheetlink"></span></div></div>`;
+}
+
+/* ---------- state ---------- */
+const S={db:null,user:null,dl:null,uid:null,isOwner:false,canWrite:true,ready:false,offline:false,
+  settings:clone(DEFAULT_SETTINGS),
+  recent:{handovers:new Map(),patrols:new Map(),loaded:{h:false,p:false}},
+  view:"home"};
+const shiftsL=()=>S.settings.shifts&&S.settings.shifts.length?S.settings.shifts:DEFAULT_SETTINGS.shifts;
+const shiftById=id=>shiftsL().find(s=>s.id===id);
+const shiftName=id=>shiftById(id)?.name||id;
+function currentShift(now=new Date()){
+  const m=now.getHours()*60+now.getMinutes();
+  for(const s of shiftsL()){const a=toMin(s.start),b=toMin(s.end);
+    if(a<b){if(m>=a&&m<b)return{shift:s,date:ymd(now)}}
+    else if(a>b){if(m>=a)return{shift:s,date:ymd(now)};if(m<b){const y=new Date(now);y.setDate(y.getDate()-1);return{shift:s,date:ymd(y)}}}
+  }
+  return{shift:shiftsL()[0],date:ymd(now)};
+}
+function nextShift(id){const L=shiftsL();const i=L.findIndex(s=>s.id===id);return L[(i+1)%L.length]}
+function shiftStartDate(date,s){const d=new Date(date+"T00:00:00");const m=toMin(s.start);d.setMinutes(m);return d}
+const docId=(date,shiftId)=>`${date}_${shiftId}`;
+const startDT=()=>S.settings.startDate?shiftStartDate(S.settings.startDate,shiftsL()[0]):null;
+const beforeStart=(d)=>{const st=startDT();return !!st&&(d||new Date())<st};
+function prevShiftOf(date,shiftId){const s=shiftById(shiftId)||shiftsL()[0];const t=new Date(shiftStartDate(date,s).getTime()-60000);return currentShift(t)}
+function pendingAcceptance(){return [...S.recent.handovers.entries()].filter(([id,h])=>h.status!=="accepted").map(([id,h])=>({id,h})).sort((a,b)=>(b.h.date+b.h.shiftId).localeCompare(a.h.date+a.h.shiftId))}
+function isAllowedSel(sel){if(S.isOwner)return true;const c=currentShift();if(sel.date===c.date&&sel.shiftId===c.shift.id)return true;const pv=prevShiftOf(c.date,c.shift.id);if(sel.date===pv.date&&sel.shiftId===pv.shift.id)return true;return false}
+function hasExamples(){for(const h of S.recent.handovers.values())if(h.example)return true;for(const p of S.recent.patrols.values())if(p.example)return true;return false}
+async function deleteExamples(){
+  if(!S.db)return;let n=0;
+  try{for(const col of ["handovers","patrols"]){const snap=await S.db.collection(col).where("example","==",true).limit(1000).get();for(const d of snap.docs){const ref=S.db.doc(col+"/"+d.id);await enqueue(ref.path,()=>ref.delete());n++}}toast(`حُذفت ${n} من السجلات التجريبية ✓`);renderSettings()}catch(e){}
+}
+function firstRecordDate(){let m=null;for(const h of S.recent.handovers.values())if(!m||h.date<m)m=h.date;for(const p of S.recent.patrols.values())if(!m||p.date<m)m=p.date;return m}
+
+/* serial write queue per document */
+const queues={};
+function enqueue(path,fn){const p=(queues[path]||Promise.resolve()).then(fn);queues[path]=p.catch(()=>{});return p.catch(e=>{handleWriteErr(e);throw e})}
+function handleWriteErr(e){
+  console.warn("write failed",e);
+  if(e&&e.code==="perm"){toast(e.message||"غير مسموح","bad");return}
+  if(e&&e.code==="auth")return;
+  if(e&&e.code==="invalid_argument"){S.canWrite=false;renderBanner();toast("لا تملك صلاحية الحفظ في هذا السجل","bad")}
+  else if(e&&e.code==="quota_exceeded"){toast("امتلأت مساحة قاعدة البيانات — راجع مسؤول النظام","bad")}
+  else toast("تعذّر الحفظ، حاول مرة أخرى","bad");
+}
+
+/* ---------- tabs / routing ---------- */
+const TABS=[
+  {id:"home",ar:"الرئيسية"},
+  {id:"patrol",ar:"الجولات الأمنية",code:"37-5"},
+  {id:"handover",ar:"تسليم الوردية",code:"37-1"},
+  {id:"gate",ar:"البوابة",code:"37-3·6",gate:true},
+  {id:"records",ar:"السجلات"},
+  {id:"settings",ar:"الإعدادات",owner:true}
+];
+function renderTabs(){
+  $("#tabs").innerHTML=TABS.filter(t=>(!t.owner||S.isOwner)&&(!t.gate||gateOn())).map(t=>`<a href="#${t.id}" ${S.view===t.id?'aria-current="page"':""}>${ICONS[t.id]}<span>${t.ar}</span>${t.code?`<span class="code">${t.code}</span>`:""}</a>`).join("");
+}
+function go(view){try{history.replaceState(null,"","#"+view)}catch(e){}route(view)}
+function route(forced){
+  let v=typeof forced==="string"?forced:(location.hash||"#home").slice(1);
+  if(!TABS.some(t=>t.id===v))v="home";
+  if(v==="settings"&&!S.isOwner)v="home";
+  if(v==="gate"&&!gateOn())v="home";
+  S.view=v;renderTabs();renderView();window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+
+function renderBanner(){
+  let h="";
+  if(GAS&&!NET.online&&AUTH.name)h+=`<div class="banner warn">📴 <div><b>لا يوجد اتصال بالإنترنت</b> — كمّل شغلك عادي، كل ما تسجله يُحفظ في الجوال ويُرسل تلقائياً أول ما يتوفر النت.<br><span class="muted">لا تحذف التطبيق ولا تمسح بيانات المتصفح قبل ما تُرسل السجلات.</span></div></div>`;
+  if(S.offline)h=`<div class="banner warn">⚠︎ <div><b>الحفظ غير متاح في هذا العرض.</b> افتح الصفحة من رابطها في Claude بعد تسجيل الدخول حتى تُحفظ السجلات في قاعدة البيانات المشتركة.</div></div>`;
+  else if(S.ready&&beforeStart()){const st=S.settings.startDate;h+=`<div class="banner info">📅 <div><b>بدء التشغيل الرسمي: ${esc(dG(st))} — ${esc(shiftsL()[0].name)} الساعة <span class="mono">${esc(shiftsL()[0].start)}</span></b>${S.isOwner?"<br>تقدر تجرب الآن كمسؤول، واحذف سجلات التجربة من الأرشيف قبل موعد البدء.":"<br>التسجيل يُفتح للحراس من موعد البدء."}</div></div>`}
+  else if(S.ready&&!S.canWrite)h+=`<div class="banner warn">⚠︎ <div><b>وضع العرض فقط.</b> صلاحيتك على هذه الصفحة لا تسمح بإدخال السجلات. اطلب من مسؤول السلامة منحك صلاحية التعديل.</div></div>`;
+  $("#banner").innerHTML=h;
+}
+function renderPill(){const c=currentShift();$("#pillname").textContent=c.shift.name;$("#pilltime").textContent=`\u2066${c.shift.start} – ${c.shift.end}\u2069`}
+function renderView(){
+  renderPill();
+  const v=S.view;
+  if(v!=="patrol")stopPatrolSub();
+  if(v!=="handover")stopHandoverSub();
+  if(v!=="records")stopRecordsSub();
+  if(v!=="gate")stopGateSub();
+  if(v==="home")renderHome();
+  else if(v==="patrol")enterPatrol();
+  else if(v==="handover")enterHandover();
+  else if(v==="records")enterRecords();
+  else if(v==="gate")enterGate();
+  else if(v==="settings")renderSettings();
+}
+const homeSafe=()=>S.view==="home"&&$("#modal").hidden&&!document.activeElement?.matches("input,textarea");
+const canEditData=()=>S.ready&&!S.offline&&S.canWrite&&(S.isOwner||!beforeStart());
+const dis=()=>canEditData()?"":"disabled";
+
+/* ---------- HOME ---------- */
+function handoverState(h){if(!h)return "none";return h.status==="accepted"?"accepted":"awaiting"}
+function openFollowups(){
+  const out=[];
+  for(const [id,h] of S.recent.handovers){
+    for(const it of ITEMS){const v=h.items?.[it.k];if(v&&v.follow==="yes"&&!(h.followups?.[it.k]?.closed))out.push({id,h,it,v})}
+  }
+  out.sort((a,b)=>(b.h.date+b.h.shiftId).localeCompare(a.h.date+a.h.shiftId));
+  return out;
+}
+function recentIssues(){
+  const out=[];const from=addDays(ymd(new Date()),-7);
+  for(const [id,p] of S.recent.patrols){if(p.date<from)continue;
+    for(const r of p.rounds||[]){const bad=AREAS.filter(a=>r.areas?.[a.k]==="issue");if(bad.length)out.push({id,p,r,bad})}}
+  out.sort((a,b)=>(b.p.date+(b.r.start||"")).localeCompare(a.p.date+(a.r.start||"")));
+  return out;
+}
+function renderHome(){
+  const cs=currentShift();const id=docId(cs.date,cs.shift.id);
+  const h=S.recent.handovers.get(id);const p=S.recent.patrols.get(id);
+  const rounds=p?.rounds||[];const done=rounds.filter(r=>r.end);const open=rounds.find(r=>!r.end);
+  const lastEnd=done.length?done.map(r=>r.end).sort().slice(-1)[0]:null;
+  const loaded=S.recent.loaded.h&&S.recent.loaded.p;
+  const hs=handoverState(h);
+  const hsChip=!loaded?'<span class="chip na">جارٍ التحميل…</span>':hs==="accepted"?'<span class="chip ok">تم التسليم والاستلام</span>':hs==="awaiting"?'<span class="chip warn">بانتظار توقيع المستلم</span>':'<span class="chip na">لم يُسجَّل بعد</span>';
+  const nx=nextShift(cs.shift.id);
+  const fu=openFollowups();const iss=recentIssues();
+
+  $("#view").innerHTML=`<div class="stack">
+  ${hasExamples()?`<div class="banner info" style="margin-top:0;align-items:center;flex-wrap:wrap"><span>ℹ︎ <b>الصفحة تعرض بيانات تجريبية (مثال)</b> لتوضيح طريقة العمل — الأسماء المكتوب بجانبها "(مثال)" ليست سجلات حقيقية.${S.isOwner?" احذفها من الإعدادات قبل التشغيل الفعلي.":""}</span>${S.isOwner?`<button class="btn" data-act="go" data-v="settings">الإعدادات</button>`:""}</div>`:""}
+  ${pendingBanner(null)}
+  <div class="hero">
+    <div class="card now">
+      <div class="k">الوردية الحالية · Current shift</div>
+      <div class="shiftname">${esc(cs.shift.name)}</div>
+      <div class="times" dir="ltr" style="text-align:right">${esc(cs.shift.start)} – ${esc(cs.shift.end)}</div>
+      <div class="dates">${esc(dG(cs.date))}<br><span style="opacity:.8">${esc(dH(cs.date))}</span></div>
+    </div>
+    <div class="card tile">
+      <div class="k">الجولات الأمنية لهذه الوردية <span class="formcode">37-5</span></div>
+      <div class="big">${loaded?done.length:"—"}</div>
+      <div class="muted" style="font-size:.85rem">${open?'<span class="live">جولة جارية الآن</span>':lastEnd?`آخر جولة انتهت <span class="mono">${esc(lastEnd)}</span>`:"لم تُسجَّل جولات بعد"}</div>
+      <div class="spacer"></div>
+      <div class="actions"><button class="btn primary block" data-act="go" data-v="patrol">${ICONS.patrol}${open?"متابعة الجولة":"بدء جولة"}</button></div>
+    </div>
+    <div class="card tile">
+      <div class="k">تسليم الوردية <span class="formcode">37-1</span></div>
+      <div style="margin-top:6px">${hsChip}</div>
+      <div class="muted" style="font-size:.85rem">تُسلَّم إلى: ${esc(nx.name)} (<span class="mono">${esc(nx.start)}</span>)</div>
+      <div class="spacer"></div>
+      <div class="actions"><button class="btn block ${hs==="accepted"?"":"primary"}" data-act="go" data-v="handover">${ICONS.handover}${hs==="accepted"?"عرض السجل":hs==="awaiting"?"توقيع الاستلام":"تسليم الوردية"}</button></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="cardhead"><div><h3>المتابعات المفتوحة</h3><div class="en">Open follow-up items from shift handovers</div></div><span class="chip ${fu.length?"warn":"ok"}">${fu.length}</span></div>
+      <div class="list" id="fulist">${fu.length?fu.slice(0,12).map(f=>`
+        <div class="li"><div class="body">
+          <div class="t">${esc(f.it.ar)}</div>
+          <div>${esc(f.v.note||"—")}</div>
+          <div class="m">${esc(dGs(f.h.date))} · ${esc(f.h.shiftName||shiftName(f.h.shiftId))} · <span class="chip ${f.v.status==="remark"?"warn":"na"}">${ST_LBL[f.v.status]||""}</span></div>
+          ${S.isOwner&&canEditData()?`<div class="row" style="margin-top:8px" id="fu-${esc(f.id)}-${f.it.k}" hidden><div class="field"><input type="text" id="funote-${esc(f.id)}-${f.it.k}" placeholder="الإجراء المتخذ للإغلاق"></div><button class="btn primary" data-act="fuClose" data-id="${esc(f.id)}" data-k="${f.it.k}">إغلاق</button></div>`:""}
+        </div>${S.isOwner&&canEditData()?`<button class="btn ghost" data-act="fuOpen" data-id="${esc(f.id)}" data-k="${f.it.k}">إغلاق المتابعة</button>`:""}</div>`).join(""):`<div class="empty"><b>لا توجد متابعات مفتوحة</b>البنود التي يُحدَّد لها "يتطلب متابعة: نعم" في تسليم الوردية تظهر هنا حتى تُغلق.</div>`}</div>
+    </div>
+    <div class="card">
+      <div class="cardhead"><div><h3>ملاحظات الجولات (آخر 7 أيام)</h3><div class="en">Patrol observations flagged ✗</div></div><span class="chip ${iss.length?"bad":"ok"}">${iss.length}</span></div>
+      <div class="list">${iss.length?iss.slice(0,10).map(x=>`
+        <div class="li"><div class="body">
+          <div class="t">${x.bad.map(b=>esc(b.ar)).join("، ")}</div>
+          <div>${esc(x.r.observation||"—")}${x.r.action?` <span class="muted">← ${esc(x.r.action)}</span>`:""}</div>
+          <div class="m">${esc(dGs(x.p.date))} · ${esc(x.p.shiftName||shiftName(x.p.shiftId))} · جولة ${x.r.no} · <span class="mono">${esc(x.r.start||"")}</span></div>
+        </div></div>`).join(""):`<div class="empty"><b>لا توجد ملاحظات</b>أي منطقة تُعلَّم بـ ✗ أثناء الجولة تظهر هنا.</div>`}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead"><div><h3>سجل الالتزام — آخر 14 يوماً</h3><div class="en">Handover completion and patrol rounds per shift · tap a cell to open it</div></div></div>
+    <div class="comp">${complianceGrid()}</div>
+    <div class="legend"><span><i style="background:var(--ok-bg);border:1px solid var(--ok)"></i>تم التسليم والاستلام</span><span><i style="background:var(--warn-bg);border:1px solid var(--warn)"></i>بانتظار المستلم</span><span><i style="background:var(--bad-bg);border:1px solid var(--bad)"></i>لم يُسجَّل تسليم</span><span>الرقم = عدد الجولات المكتملة</span></div>
+  </div>
+  </div>`;
+}
+function complianceGrid(){
+  const L=shiftsL();const now=new Date();const cs=currentShift();const today=ymd(now);const first=S.settings.startDate||firstRecordDate()||cs.date;const st0=startDT();
+  let rows="";
+  for(let i=0;i<14;i++){
+    const d=addDays(today,-i);
+    rows+=`<tr><th class="d">${esc(dGs(d))}</th>`+L.map(s=>{
+      const id=docId(d,s.id);const h=S.recent.handovers.get(id);const p=S.recent.patrols.get(id);
+      const n=(p?.rounds||[]).filter(r=>r.end).length;
+      const isCur=d===cs.date&&s.id===cs.shift.id;
+      const up=shiftStartDate(d,s)>now||d<first||(st0&&shiftStartDate(d,s)<st0)||(S.recent.loaded.h&&S.recent.loaded.p?false:true);
+      let cls=up?"up":h?(h.status==="accepted"?"ok":"warn"):(isCur?"warn":"miss");
+      const sym=up?"":h?(h.status==="accepted"?"✓":"◐"):(isCur?"…":"✗");
+      return `<td class="cell ${cls}${isCur?" cur":""}" ${up?"":`data-act="openShift" data-d="${d}" data-s="${esc(s.id)}" tabindex="0"`} title="${esc(s.name)}">${sym}${!up?` <span class="mono">${n}</span>`:""}</td>`;
+    }).join("")+`</tr>`;
+  }
+  return `<table><thead><tr><th class="d">اليوم</th>${L.map(s=>`<th>${esc(s.name.replace("الوردية ",""))}<br><span class="mono">${esc(s.start)}</span></th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ---------- signature pads ---------- */
+const PADS={};
+function mountPad(el,key,initial,onChange){
+  const cv=el.querySelector("canvas");const ctx=cv.getContext("2d");
+  let drawing=false,has=!!initial,last=null;
+  function size(){const r=el.getBoundingClientRect();const dpr=window.devicePixelRatio||1;cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineWidth=2.2;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#10243F";
+    if(initial){const img=new Image();img.onload=()=>{const w=r.width,h=r.height;const s=Math.min(w/img.width,h/img.height);ctx.drawImage(img,(w-img.width*s)/2,(h-img.height*s)/2,img.width*s,img.height*s)};img.src=initial}}
+  size();
+  const pos=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+  cv.addEventListener("pointerdown",e=>{if(el.dataset.disabled)return;drawing=true;cv.setPointerCapture(e.pointerId);last=pos(e);ctx.beginPath();ctx.arc(last.x,last.y,1,0,7);ctx.fillStyle="#10243F";ctx.fill();e.preventDefault()});
+  cv.addEventListener("pointermove",e=>{if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;has=true;e.preventDefault()});
+  const end=()=>{if(!drawing)return;drawing=false;initial=exportSig();onChange(initial)};
+  cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  function exportSig(){if(!has)return null;const o=document.createElement("canvas");o.height=120;o.width=Math.min(480,Math.round(120*cv.width/cv.height));const c=o.getContext("2d");c.drawImage(cv,0,0,o.width,o.height);return o.toDataURL("image/png")}
+  el.querySelector(".clr")?.addEventListener("click",()=>{initial=null;has=false;ctx.clearRect(0,0,cv.width,cv.height);onChange(null)});
+  PADS[key]={size};
+}
+function sigField(key,label){return `<div class="field" style="flex-basis:100%"><label class="req">${label}</label><div class="sigbox" id="sig-${key}"><canvas></canvas><button type="button" class="clr">مسح</button><div class="ph">وقّع هنا بإصبعك · Sign here</div></div></div>`}
+
+/* ---------- HANDOVER ---------- */
+const HSel={date:null,shiftId:null};let HD={doc:null,exists:false,loaded:false};let HF=null;let IR=null;let hUnsub=null;let hRenderedState=null;
+function stopHandoverSub(){if(hUnsub){hUnsub();hUnsub=null}}
+function blankHF(){return{outgoing:[{name:(GAS&&!S.isOwner&&S.uid)||"",time:hhmm(new Date()),sig:null},{name:"",time:hhmm(new Date()),sig:null}],items:Object.fromEntries(ITEMS.map(i=>[i.k,{status:null,follow:null,note:""}]))}}
+function blankIR(){return{incoming:[{name:(GAS&&!S.isOwner&&S.uid)||"",time:hhmm(new Date()),sig:null},{name:"",time:hhmm(new Date()),sig:null}],note:"",ack:false}}
+function enterHandover(){
+  if(!HSel.date){const c=currentShift();HSel.date=c.date;HSel.shiftId=c.shift.id;
+    const pv=prevShiftOf(c.date,c.shift.id);const ph=S.recent.handovers.get(docId(pv.date,pv.shift.id));
+    if(ph&&ph.status!=="accepted"&&!S.recent.handovers.get(docId(c.date,c.shift.id))){HSel.date=pv.date;HSel.shiftId=pv.shift.id}}
+  if(!isAllowedSel(HSel)&&!S.recent.handovers.has(docId(HSel.date,HSel.shiftId))){HSel.date=null;return enterHandover()}
+  subscribeHandover();renderHandover();
+}
+function subscribeHandover(){
+  stopHandoverSub();HD={doc:null,exists:false,loaded:false};hRenderedState=null;
+  const key="draft-h-"+docId(HSel.date,HSel.shiftId);HF=lsGet(key)||blankHF();IR=blankIR();
+  if(!S.db){HD.loaded=true;return}
+  hUnsub=S.db.doc("handovers/"+docId(HSel.date,HSel.shiftId)).onSnapshot(snap=>{
+    HD={doc:snap.exists?snap.data():null,exists:snap.exists,loaded:true};
+    const st=HD.exists?HD.doc.status:"none";
+    if(S.view==="handover"&&st!==hRenderedState)renderHandover();
+  },e=>{console.warn(e)});
+}
+function selBar(sel,act){
+  if(!S.isOwner){
+    const c=currentShift();
+    if(act==="p")return `<div class="sel" style="align-items:center"><span class="chip brand">الوردية الحالية</span><b>${esc(c.shift.name)}</b><span class="mono muted" dir="ltr">${esc(c.shift.start)} – ${esc(c.shift.end)}</span></div>`;
+    const pv=prevShiftOf(c.date,c.shift.id);
+    const opt=(x,l)=>`<button type="button" data-act="hPick" data-d="${esc(x.date)}" data-s="${esc(x.shift.id)}" aria-pressed="${sel.date===x.date&&sel.shiftId===x.shift.id}">${l}: ${esc(x.shift.name)}</button>`;
+    return `<div class="sel" style="align-items:center"><div class="seg" role="group">${opt(c,"الحالية")}${opt(pv,"السابقة")}</div><span class="muted" style="font-size:.82rem">التسجيل متاح للوردية الحالية والسابقة فقط</span></div>`;
+  }
+  return `<div class="sel">
+    <div class="field"><label>التاريخ <span class="en">Date</span></label><input type="date" id="${act}-date" value="${esc(sel.date)}" max="${ymd(new Date())}"></div>
+    <div class="field"><label>الوردية <span class="en">Shift</span></label><select id="${act}-shift">${shiftsL().map(s=>`<option value="${esc(s.id)}" ${s.id===sel.shiftId?"selected":""}>${esc(s.name)} (\u2066${esc(s.start)} – ${esc(s.end)}\u2069)</option>`).join("")}</select></div>
+    <button class="btn" data-act="${act}Now">الوردية الحالية</button>
+  </div>`;
+}
+function itemRow(it,ro){
+  const v=(ro?HD.doc.items?.[it.k]:HF.items[it.k])||{};
+  const b=`hf.items.${it.k}`;
+  const seg=(field,opts)=>`<div class="seg" role="group">${opts.map(([val,l])=>`<button type="button" data-act="seg" data-bind="${b}.${field}" data-val="${val}" aria-pressed="${v[field]===val}" ${ro||!canEditData()?"disabled":""}>${l}</button>`).join("")}</div>`;
+  return `<div class="ck" id="ck-${it.k}">
+    <div class="lbl">${esc(it.ar)}<span class="en">${esc(it.en)}</span></div>
+    <div><div class="sub">الحالة · Status</div>${seg("status",[["ok","سليم"],["remark","ملاحظة"],["na","لا ينطبق"]])}</div>
+    <div><div class="sub">يتطلب متابعة · Follow-up</div>${seg("follow",[["yes","نعم"],["no","لا"]])}</div>
+    ${ro?(v.note?`<div class="note"><span class="muted">الملاحظة:</span> ${esc(v.note)}</div>`:""):`<div class="note" ${v.status==="remark"||v.follow==="yes"||v.note?"":"hidden"}><textarea data-bind="${b}.note" placeholder="اكتب الملاحظة / التفاصيل${v.status==="remark"?" (مطلوب)":""}" ${dis()}>${esc(v.note)}</textarea></div>`}
+  </div>`;
+}
+function personBlock(root,i,role,en,ro,data){
+  if(ro){const p=data||{};return `<div class="person"><div class="role">${role} <span class="en">${en}</span></div>${p.name?`<div><b>${esc(p.name)}</b> · <span class="mono">${esc(p.time||"")}</span></div><div class="sigimg">${p.sig?`<img src="${p.sig}" alt="توقيع">`:'<span class="muted">—</span>'}</div>`:'<div class="muted">—</div>'}</div>`}
+  const p=(root==="hf"?HF.outgoing:IR.incoming)[i];const listId="guards-dl";
+  const arr=root==="hf"?"outgoing":"incoming";
+  return `<div class="person"><div class="role">${role} <span class="en">${en}</span>${i===1?' <span class="muted" style="font-weight:400">(اختياري)</span>':""}</div>
+    <div class="two"><div class="field"><label class="${i===0?"req":""}">الاسم <span class="en">Name</span></label><input type="text" list="${listId}" data-bind="${root}.${arr}.${i}.name" value="${esc(p.name)}" ${dis()} autocomplete="off"></div>
+    <div class="field"><label>الوقت <span class="en">Time</span></label><input type="time" data-bind="${root}.${arr}.${i}.time" value="${esc(p.time)}" ${dis()}></div></div>
+    ${sigField(`${root}-${i}`,"التوقيع · Signature")}</div>`;
+}
+function pendingBanner(exclude){const L=pendingAcceptance().filter(x=>x.id!==exclude);if(!L.length)return "";
+  return `<div class="banner warn" style="margin-top:0;flex-wrap:wrap;align-items:center">⚠︎ <b>تسليم بانتظار توقيع الاستلام:</b>${L.slice(0,4).map(x=>`<button class="btn" data-act="openShift" data-d="${esc(x.h.date)}" data-s="${esc(x.h.shiftId)}">${esc(x.h.shiftName||shiftName(x.h.shiftId))} · ${esc(dGs(x.h.date))}</button>`).join("")}</div>`}
+const guardsDatalist=()=>`<datalist id="guards-dl">${(S.settings.guards||[]).map(g=>`<option value="${esc(g)}">`).join("")}</datalist>`;
+function renderHandover(){
+  const st=HD.exists?HD.doc.status:"none";hRenderedState=HD.loaded?st:null;
+  const f=FORMS.handover;const nx=nextShift(HSel.shiftId);
+  let body="";
+  if(!HD.loaded&&S.db){body=`<div class="card empty"><b>جارٍ تحميل السجل…</b></div>`}
+  else if(st==="none"&&!isAllowedSel(HSel)){
+    body=`<div class="card empty"><b>لا يوجد تسليم مسجّل لهذه الوردية</b>تسجيل تسليم لوردية سابقة متاح لمسؤول السلامة فقط.</div>`;
+  }
+  else if(st==="none"){
+    body=`<div class="card"><div class="cardhead"><div><h3>أفراد الوردية المُسلِّمة</h3><div class="en">Outgoing shift personnel — ${esc(shiftName(HSel.shiftId))}</div></div></div>
+      <div class="people">${personBlock("hf",0,"حارس الوردية المنتهية 1","Outgoing Shift Guard 1")}${personBlock("hf",1,"حارس الوردية المنتهية 2","Outgoing Shift Guard 2")}</div></div>
+      <div class="card"><div class="cardhead"><div><h3>حالة التسليم والاستلام</h3><div class="en">Handover status — mark every item</div></div></div>
+      <div class="checklist">${ITEMS.map(it=>itemRow(it,false)).join("")}</div></div>
+      <div class="card"><div class="row" style="justify-content:space-between;align-items:center">
+        <div class="muted" style="font-size:.88rem;flex:1 1 280px">بالضغط على "تسليم الوردية" تقر الوردية المنتهية بأنه تم تسليم جميع المعلومات الأمنية والحالات القائمة ذات العلاقة. يُرسَل السجل للوردية المستلمة (${esc(nx.name)}) للتوقيع.</div>
+        <button class="btn primary big" data-act="hSubmit" ${dis()}>${ICONS.handover}تسليم الوردية</button></div></div>`;
+  } else {
+    const d=HD.doc;
+    body=`<div class="card"><div class="cardhead"><div><h3>أفراد الوردية المُسلِّمة</h3><div class="en">Outgoing shift — submitted ${esc(fmtStamp(d.submittedAt))}</div></div><span class="chip ${st==="accepted"?"ok":"warn"}">${st==="accepted"?"تم الاستلام":"بانتظار الاستلام"}</span></div>
+      <div class="people">${personBlock(null,0,"حارس الوردية المنتهية 1","Outgoing Shift Guard 1",true,d.outgoing?.[0])}${personBlock(null,1,"حارس الوردية المنتهية 2","Outgoing Shift Guard 2",true,d.outgoing?.[1])}</div></div>
+      <div class="card"><div class="cardhead"><div><h3>حالة التسليم والاستلام</h3><div class="en">Handover status</div></div></div><div class="checklist">${ITEMS.map(it=>itemRow(it,true)).join("")}</div></div>`;
+    if(st==="awaiting"){
+      body+=`<div class="card"><div class="cardhead"><div><h3>استلام الوردية — ${esc(d.nextShiftName||nx.name)}</h3><div class="en">Incoming shift: review the items above, then sign</div></div></div>
+        <div class="people">${personBlock("ir",0,"حارس الوردية المستلمة 1","Incoming Shift Guard 1")}${personBlock("ir",1,"حارس الوردية المستلمة 2","Incoming Shift Guard 2")}</div>
+        <div class="field" style="margin-top:14px"><label>ملاحظات الوردية المستلمة (إن وجدت) <span class="en">Incoming remarks</span></label><textarea data-bind="ir.note" ${dis()}>${esc(IR.note)}</textarea></div>
+        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:.9rem"><input type="checkbox" data-bind="ir.ack" ${IR.ack?"checked":""} ${dis()} style="width:20px;height:20px;margin-top:3px;flex:none"><span><b>إقرار التسليم والاستلام:</b> تقر الوردية المنتهية بأنه تم تسليم جميع المعلومات الأمنية والحالات القائمة ذات العلاقة، وتقر الوردية المستلمة باستلام وقبول الوردية.<span class="en">The outgoing shift confirms that all relevant security information and outstanding matters have been handed over, and the incoming shift confirms receipt and acceptance of the shift.</span></span></label>
+        <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn primary big" data-act="hAccept" ${dis()}>استلام الوردية</button></div></div>`;
+    } else {
+      body+=`<div class="card"><div class="cardhead"><div><h3>أفراد الوردية المستلمة</h3><div class="en">Incoming shift — accepted ${esc(fmtStamp(d.acceptedAt))}</div></div></div>
+        <div class="people">${personBlock(null,0,"حارس الوردية المستلمة 1","Incoming Shift Guard 1",true,d.incoming?.[0])}${personBlock(null,1,"حارس الوردية المستلمة 2","Incoming Shift Guard 2",true,d.incoming?.[1])}</div>
+        ${d.incomingNote?`<p><span class="muted">ملاحظات المستلم:</span> ${esc(d.incomingNote)}</p>`:""}
+        <div class="row" style="margin-top:12px;align-items:center"><button class="btn" data-act="detail" data-type="handover" data-id="${esc(docId(HSel.date,HSel.shiftId))}">${ICONS.records}عرض النموذج الرسمي</button>${S.isOwner?"":`<span class="lockline">🔒 السجل مقفل — التعديل لمسؤول السلامة فقط</span>`}</div></div>`;
+    }
+  }
+  $("#view").innerHTML=`<div class="stack">
+    <div class="pagetitle"><div><h2>${f.title}</h2><div class="en">${f.en}</div></div><span class="formcode">${f.code} · ${f.ver}</span></div>
+    ${pendingBanner(docId(HSel.date,HSel.shiftId))}
+    ${selBar(HSel,"h")}
+    <div class="muted" style="font-size:.88rem">${esc(dG(HSel.date))} · ${esc(shiftName(HSel.shiftId))} ← تُسلَّم إلى ${esc(nx.name)}</div>
+    ${body}${guardsDatalist()}</div>`;
+  /* mount pads */
+  if(st==="none"&&HD.loaded&&isAllowedSel(HSel))[0,1].forEach(i=>{const el=$("#sig-hf-"+i);if(el){if(!canEditData())el.dataset.disabled="1";mountPad(el,"hf-"+i,HF.outgoing[i].sig,v=>{HF.outgoing[i].sig=v;saveHDraft()})}});
+  if(st==="awaiting")[0,1].forEach(i=>{const el=$("#sig-ir-"+i);if(el){if(!canEditData())el.dataset.disabled="1";mountPad(el,"ir-"+i,IR.incoming[i].sig,v=>{IR.incoming[i].sig=v})}});
+}
+function saveHDraft(){lsSet("draft-h-"+docId(HSel.date,HSel.shiftId),HF)}
+async function submitHandover(){
+  if(!canEditData())return;
+  const o=HF.outgoing;
+  if(!o[0].name.trim())return toast("اكتب اسم حارس الوردية المنتهية 1","bad");
+  if(!o[0].sig)return toast("توقيع حارس الوردية المنتهية 1 مطلوب","bad");
+  if(o[1].name.trim()&&!o[1].sig)return toast("وقّع الحارس الثاني أو امسح اسمه","bad");
+  for(const it of ITEMS){const v=HF.items[it.k];
+    if(!v.status)return toast(`حدد الحالة: ${it.ar}`,"bad");
+    if(!v.follow)return toast(`حدد هل يتطلب متابعة: ${it.ar}`,"bad");
+    if(v.status==="remark"&&!v.note.trim())return toast(`اكتب الملاحظة: ${it.ar}`,"bad");}
+  const nx=nextShift(HSel.shiftId);const now=isoNow();
+  const docData={type:"handover",date:HSel.date,shiftId:HSel.shiftId,shiftName:shiftName(HSel.shiftId),nextShiftId:nx.id,nextShiftName:nx.name,
+    status:"awaiting",outgoing:o.filter((p,i)=>i===0||p.name.trim()).map(p=>({name:p.name.trim(),time:p.time,sig:p.sig})),
+    items:clone(HF.items),incoming:[],incomingNote:"",followups:{},createdAt:now,createdBy:S.uid,submittedAt:now,updatedAt:now,updatedBy:S.uid};
+  const ref=S.db.doc("handovers/"+docId(HSel.date,HSel.shiftId));
+  const btn=$('[data-act="hSubmit"]');if(btn)btn.disabled=true;
+  try{
+    const ex=await ref.get();if(ex.exists){toast("تم تسجيل تسليم هذه الوردية مسبقاً","bad");return}
+    await enqueue(ref.path,()=>ref.set(docData));lsSet("draft-h-"+docId(HSel.date,HSel.shiftId),null);toast("تم تسليم الوردية ✓ بانتظار توقيع المستلم");
+  }catch(e){}finally{if(btn)btn.disabled=false}
+}
+async function acceptHandover(){
+  if(!canEditData())return;
+  const inc=IR.incoming;
+  if(!inc[0].name.trim())return toast("اكتب اسم حارس الوردية المستلمة 1","bad");
+  if(!inc[0].sig)return toast("توقيع حارس الوردية المستلمة 1 مطلوب","bad");
+  if(inc[1].name.trim()&&!inc[1].sig)return toast("وقّع الحارس الثاني أو امسح اسمه","bad");
+  if(!IR.ack)return toast("أكّد إقرار التسليم والاستلام","bad");
+  const ref=S.db.doc("handovers/"+docId(HSel.date,HSel.shiftId));const now=isoNow();
+  try{await enqueue(ref.path,()=>ref.update({status:"accepted",incoming:inc.filter((p,i)=>i===0||p.name.trim()).map(p=>({name:p.name.trim(),time:p.time,sig:p.sig})),incomingNote:IR.note.trim(),ack:true,acceptedAt:now,acceptedBy:S.uid,updatedAt:now,updatedBy:S.uid}));toast("تم استلام الوردية ✓")}catch(e){}
+}
+
+/* ---------- PATROL ---------- */
+const PSel={date:null,shiftId:null};let PD={doc:null,exists:false,loaded:false};const PR={active:null,renderedId:undefined};let PH={gateGuard:"",patrolGuard:""};let pUnsub=null,prTimer=null,phTimer=null;
+function stopPatrolSub(){if(pUnsub){pUnsub();pUnsub=null}if(prTimer){clearTimeout(prTimer);prTimer=null;savePatrolRounds()}}
+function enterPatrol(){if(!PSel.date||!S.isOwner){const c=currentShift();PSel.date=c.date;PSel.shiftId=c.shift.id}subscribePatrol();renderPatrol()}
+function pid(){return docId(PSel.date,PSel.shiftId)}
+const headLocked=()=>!S.isOwner&&(PD.doc?.rounds||[]).some(r=>r.end);
+const hdis=()=>(!canEditData()||headLocked())?"disabled":"";
+function subscribePatrol(){
+  if(pUnsub){pUnsub();pUnsub=null}
+  PD={doc:null,exists:false,loaded:!S.db};PR.active=null;PR.renderedId=undefined;PH={gateGuard:"",patrolGuard:(GAS&&!S.isOwner&&S.uid)||""};
+  if(!S.db)return;
+  pUnsub=S.db.doc("patrols/"+pid()).onSnapshot(snap=>{
+    PD={doc:snap.exists?snap.data():null,exists:snap.exists,loaded:true};
+    const d=PD.doc||{};
+    if(document.activeElement?.dataset?.bind!=="ph.gateGuard")PH.gateGuard=d.gateGuard||PH.gateGuard||"";
+    if(document.activeElement?.dataset?.bind!=="ph.patrolGuard")PH.patrolGuard=d.patrolGuard||PH.patrolGuard||"";
+    const open=(d.rounds||[]).find(r=>!r.end);
+    if(PR.active){const same=(d.rounds||[]).find(r=>r.id===PR.active.id);if(same&&same.end)PR.active=null}
+    if(!PR.active&&open&&!prTimer)PR.active=clone(open);
+    if(S.view==="patrol")updatePatrol();
+  },e=>console.warn(e));
+}
+function renderPatrol(){
+  const f=FORMS.patrol;
+  $("#view").innerHTML=`<div class="stack">
+    <div class="pagetitle"><div><h2>${f.title}</h2><div class="en">${f.en}</div></div><span class="formcode">${f.code} · ${f.ver}</span></div>
+    ${selBar(PSel,"p")}
+    <div class="muted" style="font-size:.88rem">${esc(dG(PSel.date))} · ${esc(shiftName(PSel.shiftId))}</div>
+    <div class="card"><div class="row">
+      <div class="field"><label>حارس البوابة <span class="en">Gate Guard</span></label><input type="text" list="guards-dl" data-bind="ph.gateGuard" id="ph-gate" value="${esc(PH.gateGuard)}" ${hdis()} autocomplete="off"></div>
+      <div class="field"><label class="req">حارس الجولة <span class="en">Patrol Guard</span></label><input type="text" list="guards-dl" data-bind="ph.patrolGuard" id="ph-patrol" value="${esc(PH.patrolGuard)}" ${hdis()} autocomplete="off"></div>
+    </div></div>
+    <div id="p-active"></div>
+    <div class="card"><div class="cardhead"><div><h3>الجولات المكتملة</h3><div class="en">Completed rounds</div></div><span class="chip brand" id="p-count">0</span></div><div id="p-list"></div>${S.isOwner?"":`<div class="lockline" style="margin-top:8px">🔒 الجولة بعد إنهائها تُقفل ولا يمكن تعديلها — للتصحيح راجع مسؤول السلامة.</div>`}</div>
+    <div class="banner info">الحالة: ✓ تم التحقق · ✗ توجد ملاحظة · N/A لا ينطبق. <b>الحوادث الأمنية المهمة تتطلب إعداد تقرير حادث أمني مستقل.</b><span class="en" style="display:block">Significant security incidents require a separate security incident report.</span></div>
+    ${guardsDatalist()}</div>`;
+  PR.renderedId=undefined;updatePatrol();
+}
+function updatePatrol(){
+  if(!$("#p-list"))return;
+  const g=$("#ph-gate"),p=$("#ph-patrol");
+  if(g&&document.activeElement!==g)g.value=PH.gateGuard;if(p&&document.activeElement!==p)p.value=PH.patrolGuard;
+  const hl=!canEditData()||headLocked();if(g)g.disabled=hl;if(p)p.disabled=hl;
+  const rounds=(PD.doc?.rounds||[]).filter(r=>r.end).sort((a,b)=>a.no-b.no);
+  $("#p-count").textContent=rounds.length;
+  $("#p-list").innerHTML=!PD.loaded?`<div class="empty"><b>جارٍ التحميل…</b></div>`:rounds.length?roundsTable(rounds,true):`<div class="empty"><b>لا توجد جولات مكتملة لهذه الوردية</b>اضغط "بدء جولة جديدة" عند الخروج للجولة؛ يُسجَّل وقت البدء والانتهاء تلقائياً.</div>`;
+  const aid=PR.active?PR.active.id:null;
+  if(PR.renderedId!==aid||!$("#p-active").innerHTML){PR.renderedId=aid;renderActive()}
+}
+const mark=v=>v==="ok"?'<span class="mk-ok">✓</span>':v==="issue"?'<span class="mk-issue">✗</span>':v==="na"?'<span class="mk-na">N/A</span>':'<span class="muted">—</span>';
+function roundsTable(rounds,actions){
+  return `<div class="rounds"><table class="tbl"><thead><tr><th class="c">رقم<span class="en">No.</span></th><th>البدء<span class="en">Start</span></th><th>الانتهاء<span class="en">End</span></th>${AREAS.map(a=>`<th class="c">${esc(a.ar)}</th>`).join("")}<th>الملاحظة / الحالة</th><th>الإجراء / التصعيد</th><th>توقيع مختصر</th>${actions&&S.isOwner&&canEditData()?"<th></th>":""}</tr></thead><tbody>
+  ${rounds.map(r=>`<tr><td class="c"><b>${r.no}</b></td><td class="mono">${esc(r.start)}</td><td class="mono">${esc(r.end)}</td>${AREAS.map(a=>`<td class="c">${mark(r.areas?.[a.k])}</td>`).join("")}<td>${esc(r.observation||"")}</td><td>${esc(r.action||"")}</td><td><b>${esc(r.initials||"")}</b></td>${actions&&S.isOwner&&canEditData()?`<td><button class="btn ghost" data-act="rDel" data-id="${esc(r.id)}" title="حذف الجولة">حذف</button></td>`:""}</tr>`).join("")}
+  </tbody></table></div>`;
+}
+function initialsOf(name){const parts=String(name||"").trim().split(/\s+/).filter(Boolean);if(!parts.length)return "";return parts.length===1?parts[0]:parts[0]+" "+parts[parts.length-1].charAt(0)+"."}
+function renderActive(){
+  const el=$("#p-active");if(!el)return;
+  if(!PD.loaded){el.innerHTML="";return}
+  const a=PR.active;
+  if(!a){
+    const n=(PD.doc?.rounds||[]).length+1;
+    el.innerHTML=`<button class="btn primary big block" data-act="rStart" ${dis()}>${ICONS.patrol}بدء جولة جديدة — رقم ${n}</button>`;return;
+  }
+  el.innerHTML=`<div class="card" style="border-color:var(--brand)">
+    <div class="roundhead"><span class="roundno">جولة ${a.no}</span><span class="live">جارية</span><span class="muted" style="font-size:.85rem">بدأت <span class="mono">${esc(a.start)}</span></span></div>
+    <div class="row" style="margin-top:12px">
+      <div class="field" style="flex:0 1 150px"><label>وقت البدء <span class="en">Start</span></label><input type="time" data-bind="pr.start" value="${esc(a.start)}" ${dis()}></div>
+      <div class="field" style="flex:0 1 150px"><label>توقيع مختصر <span class="en">Initials</span></label><input type="text" data-bind="pr.initials" value="${esc(a.initials)}" ${dis()}></div>
+    </div>
+    <div class="areas" style="margin-top:8px">${AREAS.map(ar=>areaRow(ar,a)).join("")}</div>
+    <div class="row" style="margin-top:10px">
+      <div class="field" style="flex-basis:280px"><label id="obs-lbl">الملاحظة / الحالة <span class="en">Observation</span></label><textarea data-bind="pr.observation" ${dis()}>${esc(a.observation)}</textarea></div>
+      <div class="field" style="flex-basis:280px"><label>الإجراء المتخذ / التصعيد <span class="en">Action / Escalation</span></label><textarea data-bind="pr.action" ${dis()}>${esc(a.action)}</textarea></div>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:space-between;align-items:center">
+      <span class="stamp" id="pr-saved">يُحفظ تلقائياً</span>
+      <div class="row"><button class="btn danger" data-act="rCancel" ${dis()}>إلغاء الجولة</button><button class="btn primary big" data-act="rEnd" ${dis()}>إنهاء الجولة</button></div>
+    </div></div>`;
+}
+function areaRow(ar,a){const v=a.areas?.[ar.k]||null;const d=canEditData()?"":"disabled";
+  return `<div class="area" id="ar-${ar.k}"><div class="lbl">${esc(ar.ar)}<span class="en">${esc(ar.en)}</span></div>
+  <div class="seg" role="group">${[["ok","✓ تم"],["issue","✗ ملاحظة"],["na","N/A"]].map(([val,l])=>`<button type="button" data-act="seg" data-bind="pr.areas.${ar.k}" data-val="${val}" aria-pressed="${v===val}" ${d}>${l}</button>`).join("")}</div></div>`}
+function schedulePatrolSave(ms=700){clearTimeout(prTimer);const s=$("#pr-saved");if(s)s.textContent="جارٍ الحفظ…";prTimer=setTimeout(()=>{prTimer=null;savePatrolRounds()},ms)}
+function savePatrolRounds(){
+  if(!S.db||!canEditData())return Promise.resolve();
+  const rounds=(PD.doc?.rounds||[]).map(r=>r);
+  if(PR.active){const a=clone(PR.active);const i=rounds.findIndex(r=>r.id===a.id);if(i>=0)rounds[i]=a;else rounds.push(a)}
+  return writePatrol({rounds}).then(()=>{const s=$("#pr-saved");if(s)s.textContent="تم الحفظ "+hhmm(new Date())}).catch(()=>{});
+}
+function writePatrol(fields){
+  const ref=S.db.doc("patrols/"+pid());const date=PSel.date,shiftId=PSel.shiftId;
+  return enqueue(ref.path,async()=>{
+    const now=isoNow();const meta={updatedAt:now,updatedBy:S.uid};
+    const ex=PD.exists||(await ref.get()).exists;
+    if(ex)await ref.update({...fields,...meta});
+    else{await ref.set({type:"patrol",date,shiftId,shiftName:shiftName(shiftId),gateGuard:PH.gateGuard.trim(),patrolGuard:PH.patrolGuard.trim(),rounds:[],createdAt:now,createdBy:S.uid,...fields,...meta});PD.exists=true}
+  });
+}
+function startRound(){
+  if(!canEditData())return;
+  if(!PH.patrolGuard.trim()){toast("اكتب اسم حارس الجولة أولاً","bad");$("#ph-patrol")?.focus();return}
+  const rounds=PD.doc?.rounds||[];
+  if(rounds.some(r=>!r.end)){toast("توجد جولة جارية — أنهِها أولاً","bad");return}
+  const now=new Date();
+  PR.active={id:rid(),no:rounds.length+1,start:hhmm(now),end:"",areas:Object.fromEntries(AREAS.map(a=>[a.k,null])),observation:"",action:"",initials:initialsOf(PH.patrolGuard),by:S.uid,startedAt:now.toISOString()};
+  PR.renderedId=PR.active.id;renderActive();
+  writePatrol({rounds:[...rounds,clone(PR.active)],gateGuard:PH.gateGuard.trim(),patrolGuard:PH.patrolGuard.trim()}).catch(()=>{});
+  toast("بدأت الجولة "+PR.active.no);
+}
+async function endRound(){
+  const a=PR.active;if(!a)return;
+  const miss=AREAS.filter(ar=>!a.areas[ar.k]);
+  if(miss.length){toast("حدد حالة: "+miss.map(m=>m.ar).join("، "),"bad");return}
+  if(AREAS.some(ar=>a.areas[ar.k]==="issue")&&!a.observation.trim()){toast("توجد منطقة ✗ — اكتب الملاحظة","bad");$('[data-bind="pr.observation"]')?.focus();return}
+  if(!a.initials.trim()){toast("اكتب التوقيع المختصر","bad");return}
+  clearTimeout(prTimer);prTimer=null;
+  a.end=hhmm(new Date());a.endedAt=isoNow();
+  const rounds=(PD.doc?.rounds||[]).map(r=>r.id===a.id?clone(a):r);if(!rounds.some(r=>r.id===a.id))rounds.push(clone(a));
+  const no=a.no;PR.active=null;PR.renderedId=null;renderActive();
+  try{await writePatrol({rounds});toast(`تم إنهاء الجولة ${no} ✓`)}catch(e){}
+}
+
+/* ---------- GATE: visitors (37-3) + employee exits (37-6) ---------- */
+const V_CAT=[["visitor","زائر"],["contractor","مقاول"],["supplier","مورد"],["driver","سائق"],["other","أخرى"]];
+const E_TYPE=[["permission","استئذان"],["mission","مهمة عمل"],["final","خروج نهائي"],["other","أخرى"]];
+const catL=k=>(V_CAT.find(x=>x[0]===k)||[0,k||""])[1];
+const etL=k=>(E_TYPE.find(x=>x[0]===k)||[0,k||""])[1];
+const G={tab:lsGet("gate-tab")||"v",day:null,v:new Map(),e:new Map(),loaded:{v:false,e:false},roster:null,vf:null,ef:null,gate:lsGet("gate-name")||"البوابة الرئيسية",from:null};
+let gUnsubs=[];
+const gateOn=()=>S.isOwner||!!S.settings.gateForGuards;
+function blankVF(){return{idNo:"",name:"",company:"",category:"visitor",plate:"",purpose:"",host:"",notes:""}}
+function blankEF(){return{empNo:"",name:"",dept:"",exitType:"permission",reason:"",approvedBy:"",notes:""}}
+function stopGateSub(){gUnsubs.forEach(u=>u());gUnsubs=[]}
+function enterGate(){
+  if(!G.day)G.day=ymd(new Date());if(!G.vf)G.vf=blankVF();if(!G.ef)G.ef=blankEF();
+  subscribeGate();renderGate();loadRoster();
+}
+function subscribeGate(){
+  stopGateSub();if(!S.db)return;
+  const from=[addDays(ymd(new Date()),-30),G.day].sort()[0];G.from=from;G.loaded={v:false,e:false};
+  gUnsubs.push(S.db.collection("visits").where("date",">=",from).onSnapshot(snap=>{G.v=new Map(snap.docs.map(d=>[d.id,d.data()]));G.loaded.v=true;if(S.view==="gate")updateGate()},e=>{console.warn(e);if(e&&e.message)toast(e.message,"bad")}));
+  gUnsubs.push(S.db.collection("exits").where("date",">=",from).onSnapshot(snap=>{G.e=new Map(snap.docs.map(d=>[d.id,d.data()]));G.loaded.e=true;if(S.view==="gate")updateGate()},e=>console.warn(e)));
+}
+async function loadRoster(){
+  if(!GAS||G.rosterFetched)return;G.rosterFetched=true;
+  if(!G.roster){const c=lsGet("sec-roster");if(c&&c.length)G.roster=c}
+  try{const r=await gas("roster");G.roster=r;if(r&&r.length)lsSet("sec-roster",r)}catch(e){G.rosterFetched=false;if(!G.roster)G.roster=[]}
+  const dl=$("#emp-dl");if(dl)dl.innerHTML=rosterOptions();
+}
+const rosterOptions=()=>(G.roster||[]).map(r=>`<option value="${esc(r.no)}">${esc(r.name)} — ${esc(r.dept)}</option>`).join("");
+const gEdit=()=>canEditData()&&(S.isOwner||!!S.settings.gateForGuards);
+const gdis=()=>gEdit()?"":"disabled";
+const insideV=()=>[...G.v].filter(([id,d])=>!d.timeOut).sort((a,b)=>(b[1].date+b[1].timeIn).localeCompare(a[1].date+a[1].timeIn));
+const outsideE=()=>[...G.e].filter(([id,d])=>d.exitType!=="final"&&!d.returnTime).sort((a,b)=>(b[1].date+b[1].exitTime).localeCompare(a[1].date+a[1].exitTime));
+function gField(root,k,ar,en,opt={}){const v=G[root][k]||"";
+  return `<div class="field ${opt.wide?"wide":""}"><label class="${opt.req?"req":""}">${ar} <span class="en">${en}</span></label>${opt.area?`<textarea data-g="${root}.${k}" ${gdis()}>${esc(v)}</textarea>`:(opt.sugg?`<div class="sgwrap">`:"")+`<input type="text" data-g="${root}.${k}" id="g-${root}-${k}" value="${esc(v)}" ${opt.list?`list="${opt.list}"`:""} ${opt.num?'inputmode="numeric"':""} autocomplete="off" ${gdis()}>`+(opt.sugg?`<div class="sugg" id="sg-${root}-${k}" hidden></div></div>`:"")}</div>`}
+function gSeg(root,k,opts){const v=G[root][k];return `<div class="seg wrap" role="group">${opts.map(([val,l])=>`<button type="button" data-act="gPick" data-r="${root}" data-k="${k}" data-v="${val}" aria-pressed="${v===val}" ${gdis()}>${l}</button>`).join("")}</div>`}
+function renderGate(){
+  const nv=insideV().length,ne=outsideE().length;
+  $("#view").innerHTML=`<div class="stack">
+    <div class="pagetitle"><div><h2>البوابة</h2><div class="en">Gate log — visitors, contractors, suppliers & employee exits</div></div>${S.settings.gateForGuards?"":`<span class="chip warn">تجريبي — يظهر للمسؤول فقط</span>`}</div>
+    <div class="gtabs"><button data-act="gTab" data-t="v" aria-pressed="${G.tab==="v"}"><b>الزوار والمقاولون</b><span class="formcode">37-3</span><span class="chip ${nv?"warn":"na"}" id="gc-v">${nv} داخل</span></button>
+      <button data-act="gTab" data-t="e" aria-pressed="${G.tab==="e"}"><b>استئذان الموظفين</b><span class="formcode">37-6</span><span class="chip ${ne?"warn":"na"}" id="gc-e">${ne} خارج</span></button></div>
+    <div id="g-now"></div>
+    <div class="card" id="g-form"></div>
+    <div class="card" id="g-log"></div>
+    <datalist id="emp-dl">${rosterOptions()}</datalist><datalist id="appr-dl"></datalist><datalist id="host-dl"></datalist></div>`;
+  renderGateForm();updateGate();
+}
+function renderGateForm(){
+  const el=$("#g-form");if(!el)return;
+  if(G.tab==="v"){
+    el.innerHTML=`<div class="cardhead"><div><h3>تسجيل دخول</h3><div class="en">Check-in · وقت الدخول والوردية واسم الحارس تُسجَّل تلقائياً</div></div></div>
+      <div class="gform">
+        ${gField("vf","idNo","رقم الهوية / الإقامة / الجواز","ID / Iqama / Passport",{req:true})}
+        ${gField("vf","name","الاسم","Name",{req:true})}
+        ${gField("vf","company","الشركة","Company")}
+        ${gField("vf","plate","رقم لوحة المركبة","Vehicle Plate No.")}
+        <div class="field wide"><label class="req">الفئة <span class="en">Category</span></label>${gSeg("vf","category",V_CAT)}</div>
+        ${gField("vf","purpose","غرض الزيارة","Purpose of Visit",{req:true})}
+        ${gField("vf","host","الإدارة / الشخص المستضيف","Department / Host",{req:true,sugg:true})}
+        ${gField("vf","notes","ملاحظات","Notes",{wide:true})}
+      </div>
+      <div class="row" style="margin-top:12px;justify-content:space-between;align-items:center">${gateNameField()}<button class="btn primary big" data-act="vIn" ${gdis()}>${ICONS.gate}تسجيل الدخول</button></div>`;
+  }else{
+    el.innerHTML=`<div class="cardhead"><div><h3>تسجيل خروج موظف</h3><div class="en">Employee exit · اكتب الرقم الوظيفي أو الاسم واختر الموظف من القائمة</div></div></div>
+      <div class="gform">
+        ${gField("ef","empNo","الرقم الوظيفي","Employee ID",{req:true,sugg:true})}
+        ${gField("ef","name","اسم الموظف","Employee Name",{req:true,sugg:true})}
+        ${gField("ef","dept","القسم","Department")}
+        <div class="field wide"><label class="req">نوع الخروج <span class="en">Exit Type</span></label>${gSeg("ef","exitType",E_TYPE)}</div>
+        ${gField("ef","reason","سبب الاستئذان","Reason for Permission",{req:true})}
+        ${gField("ef","approvedBy","المسؤول المعتمد","Approved By",{req:true,sugg:true})}
+        ${gField("ef","notes","ملاحظات","Remarks",{wide:true})}
+      </div>
+      <div class="row" style="margin-top:12px;justify-content:space-between;align-items:center">${gateNameField()}<button class="btn primary big" data-act="eOut" ${gdis()}>${ICONS.gate}تسجيل الخروج</button></div>`;
+  }
+}
+const gateNameField=()=>`<div class="field" style="flex:0 1 220px"><label>البوابة <span class="en">Gate</span></label><input type="text" id="g-gatename" value="${esc(G.gate)}" ${gdis()}></div>`;
+function updateGate(){
+  if(!$("#g-now"))return;
+  const today=ymd(new Date());
+  const nv=insideV(),ne=outsideE();
+  const cv=$("#gc-v"),ce=$("#gc-e");if(cv){cv.textContent=nv.length+" داخل";cv.className="chip "+(nv.length?"warn":"na")}if(ce){ce.textContent=ne.length+" خارج";ce.className="chip "+(ne.length?"warn":"na")}
+  const when=d=>d.date!==today?` <span class="muted">(${esc(dGs(d.date))})</span>`:"";
+  const loaded=G.tab==="v"?G.loaded.v:G.loaded.e;
+  if(G.tab==="v"){
+    $("#g-now").innerHTML=`<div class="card nowcard"><div class="cardhead"><div><h3>داخل الموقع الآن</h3><div class="en">Visitors currently on site</div></div><span class="chip ${nv.length?"warn":"ok"}">${nv.length}</span></div>
+      <div class="list">${!loaded?'<div class="empty"><b>جارٍ التحميل…</b></div>':nv.length?nv.map(([id,d])=>`<div class="li"><div class="body"><div class="t">${esc(d.name)} <span class="chip na">${esc(catL(d.category))}</span></div>
+        <div class="m">${[d.company,d.host?"المستضيف: "+d.host:"",d.plate?"لوحة "+d.plate:""].filter(Boolean).map(esc).join(" · ")}</div><div class="m">دخل <span class="mono">${esc(d.timeIn)}</span>${when(d)} · ${esc(d.purpose||"")}</div></div>
+        <button class="btn primary" data-act="vOut" data-id="${esc(id)}" ${gdis()}>تسجيل خروج</button></div>`).join(""):'<div class="empty"><b>لا يوجد زوار داخل الموقع</b>كل من يُسجَّل دخوله يظهر هنا حتى يُسجَّل خروجه.</div>'}</div></div>`;
+  }else{
+    $("#g-now").innerHTML=`<div class="card nowcard"><div class="cardhead"><div><h3>خارج الموقع الآن</h3><div class="en">Employees out on permission / work mission</div></div><span class="chip ${ne.length?"warn":"ok"}">${ne.length}</span></div>
+      <div class="list">${!loaded?'<div class="empty"><b>جارٍ التحميل…</b></div>':ne.length?ne.map(([id,d])=>`<div class="li"><div class="body"><div class="t">${esc(d.name)} <span class="chip na">${esc(etL(d.exitType))}</span></div>
+        <div class="m">${[d.empNo?"#"+d.empNo:"",d.dept,d.approvedBy?"اعتمد: "+d.approvedBy:""].filter(Boolean).map(esc).join(" · ")}</div><div class="m">خرج <span class="mono">${esc(d.exitTime)}</span>${when(d)} · ${esc(d.reason||"")}</div></div>
+        <button class="btn primary" data-act="eBack" data-id="${esc(id)}" ${gdis()}>تسجيل العودة</button></div>`).join(""):'<div class="empty"><b>لا يوجد موظفون خارج الموقع</b>الاستئذان ومهام العمل تظهر هنا حتى تُسجَّل العودة. الخروج النهائي لا يظهر هنا.</div>'}</div></div>`;
+  }
+  /* suggestions from earlier records */
+  const uniq=a=>[...new Set(a.filter(Boolean))].slice(0,60);
+  const ad=$("#appr-dl");if(ad)ad.innerHTML=uniq([...G.e.values()].map(d=>d.approvedBy)).map(x=>`<option value="${esc(x)}">`).join("");
+  const hd=$("#host-dl");if(hd)hd.innerHTML=uniq([...G.v.values()].map(d=>d.host).concat((G.roster||[]).map(r=>r.dept))).map(x=>`<option value="${esc(x)}">`).join("");
+  renderGateLog();
+}
+function dayRows(tab,day){const m=tab==="v"?G.v:G.e;return [...m].filter(([id,d])=>d.date===day).sort((a,b)=>String(tab==="v"?a[1].timeIn:a[1].exitTime).localeCompare(String(tab==="v"?b[1].timeIn:b[1].exitTime)))}
+function renderGateLog(){
+  const el=$("#g-log");if(!el)return;const rows=dayRows(G.tab,G.day);const own=S.isOwner&&canEditData();
+  const head=G.tab==="v"?["الاسم","الهوية","الشركة","الفئة","اللوحة","الغرض","المستضيف","الدخول","الخروج","الحارس"]:["الرقم الوظيفي","الاسم","القسم","النوع","السبب","المعتمد","الخروج","العودة","الحارس"];
+  el.innerHTML=`<div class="cardhead"><div><h3>سجل اليوم</h3><div class="en">${G.tab==="v"?"Visitor / Contractor / Supplier Register":"Employee Permission / Exit Log"}</div></div><span class="chip brand">${rows.length}</span></div>
+    <div class="row" style="align-items:flex-end;margin-bottom:10px"><div class="field" style="flex:0 1 180px"><label>التاريخ <span class="en">Date</span></label><input type="date" id="g-day" value="${esc(G.day)}" max="${ymd(new Date())}" ${S.isOwner?"":`min="${esc(addDays(ymd(new Date()),-30))}"`}></div>
+      <button class="btn" data-act="gOfficial">${ICONS.records}النموذج الرسمي</button>${S.isOwner?`<button class="btn" data-act="gExport">${ICONS.download}تصدير Excel</button>`:""}</div>
+    ${rows.length?`<div class="rounds"><table class="tbl"><thead><tr><th class="c">رقم</th>${head.map(h=>`<th>${h}</th>`).join("")}${own?"<th></th>":""}</tr></thead><tbody>
+    ${rows.map(([id,d],i)=>G.tab==="v"?`<tr><td class="c">${i+1}</td><td><b>${esc(d.name)}</b>${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td class="mono">${esc(d.idNo)}</td><td>${esc(d.company||"")}</td><td>${esc(catL(d.category))}</td><td>${esc(d.plate||"")}</td><td>${esc(d.purpose||"")}</td><td>${esc(d.host||"")}</td><td class="mono">${esc(d.timeIn)}</td><td class="mono">${d.timeOut?esc(d.timeOut):'<span class="chip warn">داخل</span>'}</td><td>${esc(d.inBy||"")}${d.outBy&&d.outBy!==d.inBy?` / ${esc(d.outBy)}`:""}</td>${own?gDelBtn("visits",id):""}</tr>`
+      :`<tr><td class="c">${i+1}</td><td class="mono">${esc(d.empNo||"")}</td><td><b>${esc(d.name)}</b>${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td>${esc(d.dept||"")}</td><td>${esc(etL(d.exitType))}</td><td>${esc(d.reason||"")}</td><td>${esc(d.approvedBy||"")}</td><td class="mono">${esc(d.exitTime)}</td><td class="mono">${d.exitType==="final"?"—":d.returnTime?esc(d.returnTime):'<span class="chip warn">خارج</span>'}</td><td>${esc(d.outBy||"")}${d.returnBy&&d.returnBy!==d.outBy?` / ${esc(d.returnBy)}`:""}</td>${own?gDelBtn("exits",id):""}</tr>`).join("")}
+    </tbody></table></div>`:`<div class="empty"><b>لا توجد سجلات لهذا اليوم</b></div>`}
+    ${S.isOwner?"":`<div class="lockline" style="margin-top:8px">🔒 بعد الحفظ لا يمكن تعديل السجل — المسموح تسجيل الخروج/العودة فقط. للتصحيح راجع مسؤول السلامة.</div>`}`;
+}
+const gDelBtn=(c,id)=>`<td><button class="btn ghost" data-act="gateDel" data-c="${c}" data-id="${esc(id)}">حذف</button></td>`;
+function idPrefill(){
+  const id=String(G.vf.idNo||"").trim();if(!id)return;
+  const prev=[...G.v.values()].filter(d=>String(d.idNo).trim()===id).sort((a,b)=>(b.date+b.timeIn).localeCompare(a.date+a.timeIn))[0];
+  if(!prev)return;let n=0;
+  for(const k of ["name","company","category","plate","host"]){if(prev[k]&&(!G.vf[k]||(k==="category"&&G.vf[k]==="visitor"))){G.vf[k]=prev[k];n++}}
+  if(n){renderGateForm();toast("عُبّئت بيانات آخر زيارة لنفس الهوية");$("#g-vf-purpose")?.focus()}
+}
+/* employee picker: custom dropdown (datalist is unreliable on phones) */
+const normNum=s=>String(s||"").replace(/[\u0660-\u0669]/g,c=>c.charCodeAt(0)-0x660).replace(/[\u06F0-\u06F9]/g,c=>c.charCodeAt(0)-0x6F0);
+const normAr=s=>String(s||"").replace(/[\u064B-\u065F\u0670\u0640]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ").trim().toLowerCase();
+function rosterMatch(q,byName){
+  const R=G.roster||[];
+  if(!byName){const d=normNum(q).replace(/\D/g,"");if(!d)return[];
+    const a=R.filter(r=>r.no.startsWith(d)),b=R.filter(r=>!r.no.startsWith(d)&&r.no.includes(d));return a.concat(b).slice(0,8)}
+  const t=normAr(q).split(" ").filter(Boolean);if(!t.length)return[];
+  return R.filter(r=>{const n=normAr(r.name);return t.every(w=>n.includes(w))}).sort((x,y)=>normAr(x.name).indexOf(t[0])-normAr(y.name).indexOf(t[0])).slice(0,8);
+}
+function showSugg(k){
+  const box=$("#sg-ef-"+k),inp=$("#g-ef-"+k);if(!box||!inp)return;
+  const q=inp.value.trim();if(!q||document.activeElement!==inp){box.hidden=true;return}
+  if(!G.roster){box.innerHTML=`<div class="empty">جاري تحميل قائمة الموظفين…</div>`;box.hidden=false;loadRoster().then(()=>showSugg(k));return}
+  const m=rosterMatch(q,k==="name"||!/^[\d\u0660-\u0669\u06F0-\u06F9\s]+$/.test(q));
+  if(!m.length){box.innerHTML=`<div class="empty">ما فيه موظف مطابق — اكمل الكتابة يدوياً</div>`;box.hidden=false;return}
+  if(m.length===1&&k==="empNo"&&m[0].no===normNum(q).replace(/\D/g,"")&&G.ef.name===m[0].name){box.hidden=true;return}
+  box.innerHTML=m.map(r=>`<button type="button" data-act="gSug" data-no="${esc(r.no)}"><span class="no">${esc(r.no)}</span><span class="nm"><b>${esc(r.name)}</b><small>${esc(r.dept||"")}</small></span></button>`).join("");
+  box.hidden=false;
+}
+const hideSugg=()=>document.querySelectorAll(".sugg").forEach(b=>b.hidden=true);
+/* free-text fields with suggestions: host (visitors) and approver (exits) */
+const OPT_IDS=["g-vf-host","g-ef-approvedBy"];
+function optItems(root,k){
+  const u=a=>[...new Set(a.map(x=>String(x||"").trim()).filter(Boolean))];
+  const emps=(G.roster||[]).map(r=>({v:root==="vf"?r.name+" — "+r.dept:r.name,main:r.name,sub:r.dept}));
+  if(root==="vf")return[u([...G.v.values()].map(d=>d.host).filter(h=>!/ — /.test(h)).concat((G.roster||[]).map(r=>r.dept))).map(d=>({v:d,main:d,sub:"إدارة / قسم"})),emps];
+  return[u([...G.e.values()].map(d=>d.approvedBy)).map(d=>({v:d,main:d,sub:"سبق اعتماده"})),emps];
+}
+function optSugg(root,k){
+  const box=$("#sg-"+root+"-"+k),inp=$("#g-"+root+"-"+k);if(!box||!inp)return;
+  if(document.activeElement!==inp){box.hidden=true;return}
+  const [g1,g2]=optItems(root,k);const t=normAr(inp.value).split(" ").filter(Boolean);
+  const hit=it=>{const s=normAr(it.main+" "+it.sub);return t.every(w=>s.includes(w))};
+  const m=t.length?g1.filter(hit).slice(0,6).concat(g2.filter(hit)).slice(0,10):g1.slice(0,30);
+  if(!m.length||(m.length===1&&m[0].v===inp.value.trim())){box.hidden=true;return}
+  box.innerHTML=m.map(it=>`<button type="button" data-act="gOpt" data-r="${root}" data-k="${k}" data-v="${esc(it.v)}"><span class="nm"><b>${esc(it.main)}</b><small>${esc(it.sub||"")}</small></span></button>`).join("");
+  box.hidden=false;
+}
+document.addEventListener("focusin",e=>{if(OPT_IDS.includes(e.target.id)){const [,r,k]=e.target.id.split("-");optSugg(r,k)}});
+function pickEmp(no){
+  const r=(G.roster||[]).find(x=>x.no===no);if(!r)return;G.picked=Date.now();
+  G.ef.empNo=r.no;G.ef.name=r.name;G.ef.dept=r.dept;renderGateForm();$("#g-ef-reason")?.focus();
+}
+document.addEventListener("mousedown",e=>{if(e.target.closest(".sugg"))e.preventDefault()});
+document.addEventListener("focusout",e=>{const S2=["g-ef-empNo","g-ef-name"].concat(OPT_IDS);if(S2.includes(e.target.id))setTimeout(()=>{const a=document.activeElement;if(!a||!S2.includes(a.id))hideSugg();else if(a.id!==e.target.id)document.querySelectorAll(".sugg").forEach(b=>{if(b.id!=="sg"+a.id.slice(1))b.hidden=true})},250)});
+function empPrefill(){
+  if(G.picked&&Date.now()-G.picked<1500)return;
+  const raw=normNum(G.ef.empNo).trim();if(/[^\d\s]/.test(raw))return;const no=(raw.match(/\d+/)||[""])[0];if(!no)return;
+  if(G.ef.empNo!==no)G.ef.empNo=no;
+  const r=(G.roster||[]).find(x=>x.no===no);
+  if(!r){if(!rosterMatch(no).length)toast("الرقم غير موجود في قائمة الموظفين — اكتب الاسم يدوياً");return}
+  G.ef.empNo=r.no;G.ef.name=r.name;G.ef.dept=r.dept;renderGateForm();$("#g-ef-reason")?.focus();
+}
+async function gateSave(col,data){
+  const id=rid();const ref=S.db.doc(col+"/"+id);const now=isoNow();
+  const doc={...data,createdAt:now,createdBy:S.uid,updatedAt:now,updatedBy:S.uid};
+  await enqueue(ref.path,()=>ref.set(doc));(col==="visits"?G.v:G.e).set(id,doc);updateGate();return id;
+}
+async function visitIn(btn){
+  if(!gEdit())return;const f=G.vf;const t=k=>String(f[k]||"").trim();
+  if(!t("idNo"))return toast("اكتب رقم الهوية / الإقامة / الجواز","bad");
+  if(!t("name"))return toast("اكتب اسم الزائر","bad");
+  if(!f.category)return toast("اختر الفئة","bad");
+  if(!t("purpose"))return toast("اكتب غرض الزيارة","bad");
+  if(!t("host"))return toast("اكتب الإدارة / الشخص المستضيف","bad");
+  const dup=insideV().find(([id,d])=>String(d.idNo).trim()===t("idNo"));if(dup)return toast(`${dup[1].name} مسجّل داخل الموقع من ${dup[1].timeIn} — سجّل خروجه أولاً`,"bad");
+  const now=new Date(),c=currentShift(now);btn.disabled=true;
+  try{await gateSave("visits",{type:"visit",date:ymd(now),shiftId:c.shift.id,shiftName:c.shift.name,gate:G.gate,idNo:t("idNo"),name:t("name"),company:t("company"),category:f.category,plate:t("plate"),purpose:t("purpose"),host:t("host"),notes:t("notes"),timeIn:hhmm(now),timeOut:""});
+    toast(`تم تسجيل دخول ${t("name")} ✓`);G.vf=blankVF();renderGateForm();}catch(e){}finally{btn.disabled=false}
+}
+async function empOut(btn){
+  if(!gEdit())return;const f=G.ef;const t=k=>String(f[k]||"").trim();
+  if(!t("empNo")&&!t("name"))return toast("اكتب الرقم الوظيفي","bad");
+  if(!t("name"))return toast("اكتب اسم الموظف","bad");
+  if(!f.exitType)return toast("اختر نوع الخروج","bad");
+  if(!t("reason"))return toast("اكتب سبب الخروج","bad");
+  if(!t("approvedBy"))return toast("اكتب اسم المسؤول المعتمد","bad");
+  const dup=t("empNo")&&outsideE().find(([id,d])=>d.empNo===t("empNo"));if(dup)return toast(`${dup[1].name} مسجّل خارج من ${dup[1].exitTime} — سجّل عودته أولاً`,"bad");
+  const now=new Date(),c=currentShift(now);btn.disabled=true;
+  try{await gateSave("exits",{type:"exit",date:ymd(now),shiftId:c.shift.id,shiftName:c.shift.name,gate:G.gate,empNo:t("empNo"),name:t("name"),dept:t("dept"),exitType:f.exitType,reason:t("reason"),approvedBy:t("approvedBy"),notes:t("notes"),exitTime:hhmm(now),returnTime:""});
+    toast(`تم تسجيل خروج ${t("name")} ✓`);G.ef=blankEF();renderGateForm();}catch(e){}finally{btn.disabled=false}
+}
+function armed(el,label){if(el.dataset.armed)return true;const old=el.textContent;el.dataset.armed="1";el.textContent=label;el.classList.add("danger");setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent=old;el.classList.remove("danger")}},4000);return false}
+async function gateMark(col,id,el){
+  const m=col==="visits"?G.v:G.e;const d=m.get(id);if(!d||!gEdit())return;
+  if(!armed(el,col==="visits"?"تأكيد الخروج؟":"تأكيد العودة؟"))return;
+  const now=new Date();const k=col==="visits"?"timeOut":"returnTime";const ref=S.db.doc(col+"/"+id);el.disabled=true;
+  try{await enqueue(ref.path,()=>ref.update({[k]:hhmm(now),updatedAt:isoNow(),updatedBy:S.uid}));m.set(id,{...d,[k]:hhmm(now)});updateGate();toast(col==="visits"?`تم تسجيل خروج ${d.name} ✓`:`تم تسجيل عودة ${d.name} ✓`)}catch(e){el.disabled=false}
+}
+/* official daily form (same layout as the paper) */
+function officialGate(tab,day){
+  const rows=dayRows(tab,day).map(x=>x[1]);const f=FORMS[tab==="v"?"visits":"exits"];
+  const gates=[...new Set(rows.map(d=>d.gate).filter(Boolean))].join("، ");
+  const shifts=[...new Set(rows.map(d=>d.shiftName).filter(Boolean))].join("، ");
+  const pad8=n=>Array.from({length:Math.max(0,8-n)});
+  if(tab==="v")return `<div class="of">${ofHead(f)}<div class="sp"></div>
+    <table><tr><td><b>التاريخ / Date:</b> ${esc(day)} — ${esc(dG(day))}</td><td><b>الوردية / Shift:</b> ${esc(shifts||"—")}</td><td><b>البوابة / Gate:</b> ${esc(gates||"—")}</td></tr></table><div class="sp"></div>
+    <table><tr><th class="c">رقم<span class="en">No.</span></th><th>الاسم<span class="en">Name</span></th><th>الهوية / الإقامة / الجواز<span class="en">ID / Iqama / Passport</span></th><th>الشركة<span class="en">Company</span></th><th class="c">الفئة<span class="en">Category</span></th><th>رقم لوحة المركبة<span class="en">Vehicle Plate No.</span></th><th>غرض الزيارة<span class="en">Purpose of Visit</span></th><th>الإدارة / الشخص المستضيف<span class="en">Department / Host</span></th><th class="c">وقت الدخول<span class="en">Time In</span></th><th class="c">وقت الخروج<span class="en">Time Out</span></th><th>توقيع مختصر للحارس<span class="en">Guard's Signature</span></th><th>ملاحظات<span class="en">Notes</span></th></tr>
+    ${rows.map((d,i)=>`<tr><td class="c">${i+1}</td><td>${esc(d.name)}</td><td>${esc(d.idNo)}</td><td>${esc(d.company||"")}</td><td class="c">${esc(catL(d.category))}</td><td>${esc(d.plate||"")}</td><td>${esc(d.purpose||"")}</td><td>${esc(d.host||"")}</td><td class="c">${esc(d.timeIn)}</td><td class="c">${esc(d.timeOut||"")}</td><td>${esc(initialsOf(d.inBy||""))}${d.outBy&&d.outBy!==d.inBy?" / "+esc(initialsOf(d.outBy)):""}</td><td>${esc(d.notes||"")}</td></tr>`).join("")}
+    ${pad8(rows.length).map((_,i)=>`<tr><td class="c">${rows.length+i+1}</td>${"<td></td>".repeat(11)}</tr>`).join("")}</table>
+    <p style="font-size:11px;margin:8px 0 0">الفئة / Category: زائر / مقاول / مورد / سائق / أخرى (Visitor / Contractor / Supplier / Driver / Other)</p>
+    <div class="foot"><span>شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم</span><span>سجل إلكتروني — ${rows.length} سجل · طُبع ${esc(fmtStamp(isoNow()))}</span></div></div>`;
+  return `<div class="of">${ofHead(f)}<div class="sp"></div>
+    <table><tr><td><b>التاريخ / Date:</b> ${esc(day)} — ${esc(dG(day))}</td><td><b>البوابة / Gate:</b> ${esc(gates||"—")}</td></tr></table><div class="sp"></div>
+    <table><tr><th class="c">رقم<span class="en">No.</span></th><th>اسم الموظف<span class="en">Employee Name</span></th><th>الرقم الوظيفي<span class="en">Employee ID</span></th><th>القسم<span class="en">Department</span></th><th>سبب الاستئذان<span class="en">Reason for Permission</span></th><th class="c">نوع الخروج<span class="en">Exit Type</span></th><th>المسؤول المعتمد<span class="en">Approved By</span></th><th class="c">وقت الخروج<span class="en">Exit Time</span></th><th class="c">وقت العودة<span class="en">Return Time</span></th><th>توقيع الحارس<span class="en">Guard Signature</span></th><th>ملاحظات<span class="en">Remarks</span></th></tr>
+    ${rows.map((d,i)=>`<tr><td class="c">${i+1}</td><td>${esc(d.name)}</td><td>${esc(d.empNo||"")}</td><td>${esc(d.dept||"")}</td><td>${esc(d.reason||"")}</td><td class="c">${esc(etL(d.exitType))}</td><td>${esc(d.approvedBy||"")}</td><td class="c">${esc(d.exitTime)}</td><td class="c">${d.exitType==="final"?"—":esc(d.returnTime||"")}</td><td>${esc(initialsOf(d.outBy||""))}${d.returnBy&&d.returnBy!==d.outBy?" / "+esc(initialsOf(d.returnBy)):""}</td><td>${esc(d.notes||"")}</td></tr>`).join("")}
+    ${pad8(rows.length).map((_,i)=>`<tr><td class="c">${rows.length+i+1}</td>${"<td></td>".repeat(10)}</tr>`).join("")}</table>
+    <p style="font-size:11px;margin:8px 0 0">نوع الخروج: استئذان / مهمة عمل / خروج نهائي / أخرى</p>
+    <div class="foot"><span>شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم</span><span>سجل إلكتروني — ${rows.length} سجل · طُبع ${esc(fmtStamp(isoNow()))}</span></div></div>`;
+}
+function showGateOfficial(){
+  const f=FORMS[G.tab==="v"?"visits":"exits"];
+  $("#modal").innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="${f.title}">
+    <div class="mhead"><div><b>${f.title}</b> <span class="formcode">${f.code}</span><div class="muted" style="font-size:.82rem">${esc(dG(G.day))}</div></div>
+    <div class="row">${S.dl?`<button class="btn" data-act="gDl">${ICONS.download}تنزيل نسخة</button>`:""}<button class="btn" data-act="closeModal" aria-label="إغلاق">إغلاق ✕</button></div></div>
+    <div class="mbody">${officialGate(G.tab,G.day)}</div></div>`;
+  $("#modal").hidden=false;document.body.style.overflow="hidden";
+}
+function gateDownload(){
+  const f=FORMS[G.tab==="v"?"visits":"exits"];
+  const html=`\x3c!doctype html>\x3chtml lang="ar" dir="rtl">\x3chead>\x3cmeta charset="utf-8">\x3ctitle>${f.title} ${G.day}\x3c/title>\x3clink rel="stylesheet" href="https:\/\/fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap">\x3cstyle>body{margin:0;padding:16px;background:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}:root{--f-mono:"IBM Plex Mono",monospace}@page{size:A4 landscape;margin:10mm}${OF_CSS()} .of{min-width:0;padding:0}\x3c/style>\x3c/head>\x3cbody>${officialGate(G.tab,G.day)}\x3c/body>\x3c/html>`;
+  saveFile(`${f.code.replace("/","-")}_${G.day}.html`,html);
+}
+async function gateExport(){
+  let X;try{X=await loadXLSX()}catch(e){toast("تعذّر تحميل أداة Excel","bad");return}
+  const byDate=(a,b,k)=>(a.date+a[k]).localeCompare(b.date+b[k]);
+  const v=[...G.v.values()].sort((a,b)=>byDate(a,b,"timeIn")).map(d=>({"التاريخ":d.date,"الوردية":d.shiftName||"","البوابة":d.gate||"","الاسم":d.name,"الهوية / الإقامة / الجواز":d.idNo,"الشركة":d.company||"","الفئة":catL(d.category),"رقم اللوحة":d.plate||"","غرض الزيارة":d.purpose||"","الإدارة / المستضيف":d.host||"","وقت الدخول":d.timeIn,"وقت الخروج":d.timeOut||"","حارس الدخول":d.inBy||"","حارس الخروج":d.outBy||"","ملاحظات":d.notes||""}));
+  const e=[...G.e.values()].sort((a,b)=>byDate(a,b,"exitTime")).map(d=>({"التاريخ":d.date,"الوردية":d.shiftName||"","البوابة":d.gate||"","الرقم الوظيفي":d.empNo||"","اسم الموظف":d.name,"القسم":d.dept||"","نوع الخروج":etL(d.exitType),"السبب":d.reason||"","المسؤول المعتمد":d.approvedBy||"","وقت الخروج":d.exitTime,"وقت العودة":d.exitType==="final"?"—":(d.returnTime||""),"حارس الخروج":d.outBy||"","حارس العودة":d.returnBy||"","ملاحظات":d.notes||""}));
+  if(!v.length&&!e.length){toast("لا توجد بيانات للتصدير","bad");return}
+  const wb=X.utils.book_new();wb.Workbook={Views:[{RTL:true}]};
+  if(v.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(v),"الزوار 37-3");
+  if(e.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(e),"استئذان الموظفين 37-6");
+  saveFile(`Gate-Log_${G.from}_to_${ymd(new Date())}.xlsx`,new Uint8Array(X.write(wb,{bookType:"xlsx",type:"array"})));
+}
+document.addEventListener("input",e=>{
+  const el=e.target.closest("[data-g]");if(el){const [r,k]=el.dataset.g.split(".");G[r][k]=el.value;if(el.id==="g-ef-empNo"||el.id==="g-ef-name")showSugg(k);else if(OPT_IDS.includes(el.id))optSugg(r,k);return}
+  if(e.target.id==="g-gatename"){G.gate=e.target.value;lsSet("gate-name",G.gate)}
+});
+document.addEventListener("change",e=>{
+  const id=e.target.id;
+  if(id==="g-vf-idNo")idPrefill();
+  else if(id==="g-ef-empNo")setTimeout(empPrefill,300);
+  else if(id==="g-day"&&e.target.value){G.day=e.target.value;if(G.day<G.from)subscribeGate();renderGateLog()}
+  else if(id==="set-gate"&&SETF)SETF.gateForGuards=e.target.checked;
+});
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]");if(!el||el.disabled)return;const a=el.dataset.act;
+  if(a==="gTab"){G.tab=el.dataset.t;lsSet("gate-tab",G.tab);renderGate()}
+  else if(a==="gPick"){G[el.dataset.r][el.dataset.k]=el.dataset.v;el.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b===el?"true":"false"))}
+  else if(a==="gSug")pickEmp(el.dataset.no);
+  else if(a==="gOpt"){const r=el.dataset.r,k=el.dataset.k;G[r][k]=el.dataset.v;const i=$("#g-"+r+"-"+k);if(i)i.value=el.dataset.v;hideSugg()}
+  else if(a==="vIn")visitIn(el);
+  else if(a==="eOut")empOut(el);
+  else if(a==="vOut")gateMark("visits",el.dataset.id,el);
+  else if(a==="eBack")gateMark("exits",el.dataset.id,el);
+  else if(a==="gOfficial")showGateOfficial();
+  else if(a==="gDl")gateDownload();
+  else if(a==="gExport")gateExport();
+  else if(a==="gateDel"){if(!S.isOwner||!armed(el,"تأكيد الحذف"))return;const c=el.dataset.c,id=el.dataset.id;const ref=S.db.doc(c+"/"+id);
+    enqueue(ref.path,()=>ref.delete()).then(()=>{(c==="visits"?G.v:G.e).delete(id);updateGate();toast("حُذف السجل")}).catch(()=>{})}
+});
+
+/* ---------- RECORDS ---------- */
+const RF={from:null,to:null,type:"all",shift:"all",flag:"all"};let RD={h:new Map(),p:new Map(),loaded:false};let rUnsubs=[];let rKey=null;
+function stopRecordsSub(){rUnsubs.forEach(u=>u());rUnsubs=[];rKey=null}
+function enterRecords(){
+  if(!RF.from){RF.to=ymd(new Date());RF.from=addDays(RF.to,-30)}
+  subscribeRecords();renderRecords();
+}
+function subscribeRecords(){
+  const key=RF.from+"|"+RF.to;if(key===rKey&&rUnsubs.length)return;
+  stopRecordsSub();rKey=key;RD={h:new Map(),p:new Map(),loaded:false};
+  if(!S.db){RD.loaded=true;return}
+  let got=0;
+  const sub=(col,m)=>S.db.collection(col).where("date",">=",RF.from).where("date","<=",RF.to).limit(1000).onSnapshot(snap=>{
+    m.clear();snap.docs.forEach(d=>m.set(d.id,d.data()));if(++got>=2)RD.loaded=true;if(S.view==="records")renderRecList()},e=>console.warn(e));
+  rUnsubs=[sub("handovers",RD.h),sub("patrols",RD.p)];
+}
+function recItems(){
+  const out=[];
+  if(RF.type!=="patrol")for(const [id,d] of RD.h)out.push({type:"handover",id,d});
+  if(RF.type!=="handover")for(const [id,d] of RD.p)out.push({type:"patrol",id,d});
+  return out.filter(x=>RF.shift==="all"||x.d.shiftId===RF.shift).filter(x=>{
+    if(RF.flag==="all")return true;
+    const f=recFlags(x);
+    if(RF.flag==="issues")return f.issues>0;
+    if(RF.flag==="open")return f.openFu>0;
+    if(RF.flag==="awaiting")return x.type==="handover"&&x.d.status!=="accepted";
+    return true;
+  }).sort((a,b)=>(b.d.date+(b.d.shiftId||"")).localeCompare(a.d.date+(a.d.shiftId||""))||a.type.localeCompare(b.type));
+}
+function recFlags(x){
+  if(x.type==="handover"){const items=x.d.items||{};const rem=ITEMS.filter(i=>items[i.k]?.status==="remark").length;const openFu=ITEMS.filter(i=>items[i.k]?.follow==="yes"&&!x.d.followups?.[i.k]?.closed).length;return{issues:rem,openFu}}
+  const rs=x.d.rounds||[];return{issues:rs.filter(r=>AREAS.some(a=>r.areas?.[a.k]==="issue")).length,openFu:0,rounds:rs.filter(r=>r.end).length};
+}
+function renderRecords(){
+  $("#view").innerHTML=`<div class="stack">
+    <div class="pagetitle"><div><h2>أرشيف السجلات</h2><div class="en">All submitted logs · search, open, export</div></div>
+      <div class="row">${S.dl?`<button class="btn" data-act="exportX">${ICONS.download}تصدير Excel</button>`:""}</div></div>
+    <div class="sel">
+      <div class="field"><label>من <span class="en">From</span></label><input type="date" id="rf-from" value="${esc(RF.from)}"></div>
+      <div class="field"><label>إلى <span class="en">To</span></label><input type="date" id="rf-to" value="${esc(RF.to)}"></div>
+      <div class="field"><label>النموذج <span class="en">Form</span></label><select id="rf-type"><option value="all">الكل</option><option value="handover">تسليم الوردية 37-1</option><option value="patrol">الجولات الأمنية 37-5</option></select></div>
+      <div class="field"><label>الوردية <span class="en">Shift</span></label><select id="rf-shift"><option value="all">الكل</option>${shiftsL().map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("")}</select></div>
+      <div class="field"><label>تصفية <span class="en">Filter</span></label><select id="rf-flag"><option value="all">كل السجلات</option><option value="issues">بها ملاحظات</option><option value="open">متابعات مفتوحة</option><option value="awaiting">بانتظار الاستلام</option></select></div>
+    </div>
+    <div id="rec-sum" class="muted" style="font-size:.88rem"></div>
+    <div class="reclist" id="reclist"></div></div>`;
+  $("#rf-type").value=RF.type;$("#rf-shift").value=RF.shift;$("#rf-flag").value=RF.flag;
+  renderRecList();
+}
+function renderRecList(){
+  const el=$("#reclist");if(!el)return;
+  if(!RD.loaded&&S.db){el.innerHTML=`<div class="card empty"><b>جارٍ تحميل السجلات…</b></div>`;return}
+  const items=recItems();
+  const nh=items.filter(x=>x.type==="handover").length,np=items.filter(x=>x.type==="patrol").length;
+  const nr=items.filter(x=>x.type==="patrol").reduce((s,x)=>s+(x.d.rounds||[]).filter(r=>r.end).length,0);
+  $("#rec-sum").textContent=`${items.length} سجل · ${nh} تسليم وردية · ${np} سجل جولات (${nr} جولة مكتملة) · من ${RF.from} إلى ${RF.to}`;
+  if(!items.length){el.innerHTML=`<div class="card empty"><b>لا توجد سجلات في هذه الفترة</b>كل نموذج يعبّيه الفريق من شاشتي "الجولات الأمنية" و"تسليم الوردية" يُحفظ هنا تلقائياً.</div>`;return}
+  el.innerHTML=items.map(x=>{const f=recFlags(x);const d=x.d;
+    const title=x.type==="handover"?"تسليم واستلام الوردية":"سجل الدوريات الأمنية";
+    const meta=x.type==="handover"?`<span>${esc((d.outgoing||[]).map(p=>p.name).join("، "))} ← ${esc((d.incoming||[]).map(p=>p.name).join("، ")||"—")}</span>`:`<span>حارس الجولة: ${esc(d.patrolGuard||"—")}</span><span>البوابة: ${esc(d.gateGuard||"—")}</span>`;
+    const flags=x.type==="handover"?`${d.status==="accepted"?'<span class="chip ok">مُستلَمة</span>':'<span class="chip warn">بانتظار الاستلام</span>'}${f.issues?`<span class="chip warn">${f.issues} ملاحظة</span>`:""}${f.openFu?`<span class="chip bad">${f.openFu} متابعة مفتوحة</span>`:""}`:`<span class="chip brand">${f.rounds} جولة</span>${f.issues?`<span class="chip bad">${f.issues} جولة بها ✗</span>`:""}`;
+    return `<button class="rec" data-act="detail" data-type="${x.type}" data-id="${esc(x.id)}"><span class="ic">${ICONS[x.type]}</span><span style="min-width:0"><span class="t">${title} <span class="formcode">${FORMS[x.type].code}</span></span><span class="m"><span>${esc(dGs(d.date))}</span><span>${esc(d.shiftName||shiftName(d.shiftId))}</span>${meta}</span></span><span class="flags">${d.edits&&d.edits.length?'<span class="chip na">مُعدَّل</span>':""}${d.example?'<span class="chip na">مثال</span>':""}${flags}</span></button>`}).join("");
+}
+
+/* ---------- official form rendering (shared by viewer + download) ---------- */
+function ofHead(f){return `<table class="of-head"><tr><td class="of-logo" rowspan="2"><img src="${LOGO}" alt="Manaf"></td><td class="of-title" colspan="4">${f.title}<span>${f.en}</span></td></tr>
+  <tr><td><span>النوع / Type</span><b>نموذج أمني</b></td><td><span>الكود / Code</span><b>${f.code}</b></td><td><span>الإصدار / المراجعة</span><b>${f.ver}</b></td><td><span>تاريخ الإصدار / Issue Date</span><b>${f.issue}</b></td></tr></table>`}
+function ofFoot(d,names){return `<div class="foot">${d.example?'<b class="warn">سجل تجريبي (مثال) للتوضيح فقط</b>':""}<span>شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم</span><span>سجل إلكتروني — أُنشئ ${esc(fmtStamp(d.createdAt))}${names&&d.createdBy&&names[d.createdBy]?` بواسطة ${esc(names[d.createdBy])}`:""} · آخر تحديث ${esc(fmtStamp(d.updatedAt))}</span></div>`}
+function officialHandover(d,names){
+  const box=(on,l,en)=>`<span class="box ${on?"on":""}">${on?"☑":"☐"} ${l} <small>${en}</small></span>`;
+  const person=(role,en,p)=>`<tr><td><b>${role}</b><span class="en">${en}</span></td><td>${esc(p?.name||"")}</td><td class="c">${esc(p?.time||"")}</td><td class="c">${p?.sig?`<img class="sig" src="${p.sig}" alt="">`:""}</td></tr>`;
+  return `<div class="of">${ofHead(FORMS.handover)}<div class="sp"></div>
+  <table><tr><td><b>التاريخ / Date:</b> ${esc(d.date)} — ${esc(dG(d.date))}</td><td><b>الوردية / Shift:</b> ${esc(d.shiftName||"")} ← ${esc(d.nextShiftName||"")}</td></tr></table><div class="sp"></div>
+  <table><tr><th colspan="4" class="sec">أفراد الوردية<span class="en">Shift Personnel</span></th></tr>
+  <tr><th>البند<span class="en">Item</span></th><th>الاسم<span class="en">Name</span></th><th class="c">الوقت<span class="en">Time</span></th><th class="c">التوقيع<span class="en">Signature</span></th></tr>
+  ${person("حارس الوردية المنتهية 1","Outgoing Shift Guard 1",d.outgoing?.[0])}${person("حارس الوردية المنتهية 2","Outgoing Shift Guard 2",d.outgoing?.[1])}
+  ${person("حارس الوردية المستلمة 1","Incoming Shift Guard 1",d.incoming?.[0])}${person("حارس الوردية المستلمة 2","Incoming Shift Guard 2",d.incoming?.[1])}</table><div class="sp"></div>
+  <table><tr><th colspan="4" class="sec">حالة التسليم والاستلام<span class="en">Handover Status</span></th></tr>
+  <tr><th>البند<span class="en">Item</span></th><th>الحالة<span class="en">Status</span></th><th>يتطلب متابعة<span class="en">Follow-up Required</span></th><th>الملاحظة<span class="en">Remark</span></th></tr>
+  ${ITEMS.map(it=>{const v=d.items?.[it.k]||{};const fu=d.followups?.[it.k];return `<tr><td><b>${it.ar}</b><span class="en">${it.en}</span></td><td>${box(v.status==="ok","سليم","OK")}${box(v.status==="remark","توجد ملاحظة","Remark")}${box(v.status==="na","لا ينطبق","N/A")}</td><td>${box(v.follow==="yes","نعم","Yes")}${box(v.follow==="no","لا","No")}</td><td>${esc(v.note||"")}${fu?.closed?`<div class="ok">✓ أُغلقت ${esc(fmtStamp(fu.closedAt))}${fu.note?": "+esc(fu.note):""}</div>`:v.follow==="yes"?'<div class="warn">متابعة مفتوحة</div>':""}</td></tr>`}).join("")}</table><div class="sp"></div>
+  ${d.incomingNote?`<table><tr><td><b>ملاحظات الوردية المستلمة:</b> ${esc(d.incomingNote)}</td></tr></table><div class="sp"></div>`:""}
+  <table><tr><th class="sec">إقرار التسليم والاستلام<span class="en">Handover Acknowledgement</span></th></tr><tr><td>${d.status==="accepted"?'<span class="ok">☑</span>':"☐"} تقر الوردية المنتهية بأنه تم تسليم جميع المعلومات الأمنية والحالات القائمة ذات العلاقة، وتقر الوردية المستلمة باستلام وقبول الوردية.<span class="en">The outgoing shift confirms that all relevant security information and outstanding matters have been handed over, and the incoming shift confirms receipt and acceptance of the shift.</span>
+  <div style="margin-top:6px;font-size:11px">سُلِّمت: ${esc(fmtStamp(d.submittedAt))}${d.acceptedAt?` · استُلمت: ${esc(fmtStamp(d.acceptedAt))}`:" · <b class='warn'>لم تُستلم بعد</b>"}</div></td></tr></table>
+  ${editsLog(d)}${ofFoot(d,names)}</div>`;
+}
+function officialPatrol(d,names){
+  const rs=(d.rounds||[]).slice().sort((a,b)=>a.no-b.no);
+  const mk=v=>v==="ok"?'<span class="ok">✓</span>':v==="issue"?'<span class="bad">✗</span>':v==="na"?"N/A":"";
+  return `<div class="of">${ofHead(FORMS.patrol)}<div class="sp"></div>
+  <table><tr><td><b>التاريخ / Date:</b> ${esc(d.date)}</td><td><b>الوردية / Shift:</b> ${esc(d.shiftName||"")}</td><td><b>حارس البوابة / Gate Guard:</b> ${esc(d.gateGuard||"")}</td><td><b>حارس الجولة / Patrol Guard:</b> ${esc(d.patrolGuard||"")}</td></tr></table><div class="sp"></div>
+  <table><tr><th class="c">رقم الجولة<span class="en">Round No.</span></th><th class="c">وقت البدء<span class="en">Start Time</span></th><th class="c">وقت الانتهاء<span class="en">End Time</span></th>${AREAS.map(a=>`<th class="c">${a.ar}<span class="en">${a.en}</span></th>`).join("")}<th>الملاحظة / الحالة<span class="en">Observation / Status</span></th><th>الإجراء المتخذ / التصعيد<span class="en">Action Taken / Escalation</span></th><th class="c">توقيع مختصر للحارس<span class="en">Guard Initials</span></th></tr>
+  ${rs.length?rs.map(r=>`<tr><td class="c"><b>${r.no}</b></td><td class="c">${esc(r.start)}</td><td class="c">${esc(r.end||"جارية")}</td>${AREAS.map(a=>`<td class="c">${mk(r.areas?.[a.k])}</td>`).join("")}<td>${esc(r.observation||"")}</td><td>${esc(r.action||"")}</td><td class="c">${esc(r.initials||"")}</td></tr>`).join(""):`<tr><td colspan="${AREAS.length+6}" class="c">لا توجد جولات</td></tr>`}</table>
+  <p style="font-size:11px;margin:8px 0 0">الحالة: ✓ تم التحقق / ✗ توجد ملاحظة / لا ينطبق N/A. الحوادث الأمنية المهمة تتطلب إعداد تقرير حادث أمني مستقل.<br>Status: ✓ Verified / ✗ Remark / N/A. Significant security incidents require a separate security incident report.</p>
+  ${editsLog(d)}${ofFoot(d,names)}</div>`;
+}
+const OF_CSS=()=>{let css="";for(const sh of document.styleSheets){try{for(const r of sh.cssRules){if(r.selectorText&&/(^|,|\s)\.of/.test(r.selectorText))css+=r.cssText+"\n"}}catch(e){}}return css};
+
+/* detail modal */
+let DET=null;
+async function getDoc(type,id){
+  if(GAS&&S.db){const s=await S.db.doc((type==="handover"?"handovers/":"patrols/")+id).get();return s.exists?s.data():null}
+  const m=type==="handover"?(RD.h.get(id)||S.recent.handovers.get(id)):(RD.p.get(id)||S.recent.patrols.get(id));
+  if(m)return m;if(type==="handover"&&HD.doc&&docId(HSel.date,HSel.shiftId)===id)return HD.doc;
+  if(!S.db)return null;const s=await S.db.doc((type==="handover"?"handovers/":"patrols/")+id).get();return s.exists?s.data():null;
+}
+async function openDetail(type,id){
+  const d=await getDoc(type,id);if(!d){toast("السجل غير موجود","bad");return}
+  DET={type,id,d,names:{}};
+  const ids=[d.createdBy,d.updatedBy,d.acceptedBy].filter(Boolean);
+  if(S.user){try{const ps=await S.user.profiles(ids);for(const k in ps)if(ps[k].name)DET.names[k]=ps[k].name}catch(e){}}
+  else ids.forEach(x=>DET.names[x]=x);
+  showDetail();
+}
+function showDetail(confirmDel){
+  const {type,id,d,names}=DET;const f=FORMS[type];
+  $("#modal").innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="${f.title}">
+    <div class="mhead"><div><b>${f.title}</b> <span class="formcode">${f.code}</span><div class="muted" style="font-size:.82rem">${esc(dG(d.date))} · ${esc(d.shiftName||"")}</div></div>
+    <div class="row">${confirmDel?`<span style="color:var(--bad);font-weight:600">حذف هذا السجل نهائياً؟</span><button class="btn danger" data-act="delYes">نعم، احذف</button><button class="btn" data-act="delNo">تراجع</button>`:
+      `${S.dl?`<button class="btn" data-act="dlOne">${ICONS.download}تنزيل نسخة</button>`:""}${S.isOwner&&canEditData()?`<button class="btn" data-act="edOpen">تعديل</button><button class="btn danger" data-act="delAsk">حذف</button>`:""}<button class="btn" data-act="closeModal" aria-label="إغلاق">إغلاق ✕</button>`}</div></div>
+    <div class="mbody">${type==="handover"?officialHandover(d,names):officialPatrol(d,names)}</div></div>`;
+  $("#modal").hidden=false;document.body.style.overflow="hidden";
+}
+const val=id=>document.getElementById(id)?.value??"";
+function showEdit(){
+  const {type,d}=DET;const f=FORMS[type];
+  const opts=(cur,list)=>list.map(([v,l])=>`<option value="${v}" ${cur===v?"selected":""}>${l}</option>`).join("");
+  let h="";
+  if(type==="handover"){
+    const ppl=(key,labels)=>labels.map((l,i)=>{const p=(d[key]||[])[i];if(!p)return "";return `<div class="edrow"><div class="lbl">${l}</div><div class="field"><label>الاسم</label><input type="text" id="ed-${key}-${i}-name" value="${esc(p.name)}"></div><div class="field" style="flex:0 1 140px"><label>الوقت</label><input type="time" id="ed-${key}-${i}-time" value="${esc(p.time)}"></div></div>`}).join("");
+    h+=`<div class="card"><h3>الأفراد</h3><div class="muted" style="font-size:.82rem">التوقيعات لا تُعدَّل.</div>${ppl("outgoing",["حارس الوردية المنتهية 1","حارس الوردية المنتهية 2"])}${ppl("incoming",["حارس الوردية المستلمة 1","حارس الوردية المستلمة 2"])}</div>`;
+    h+=`<div class="card"><h3>البنود</h3>${ITEMS.map(it=>{const v=d.items?.[it.k]||{};return `<div class="edrow"><div class="lbl">${esc(it.ar)}</div><select id="ed-st-${it.k}" aria-label="الحالة">${opts(v.status,[["ok","سليم"],["remark","توجد ملاحظة"],["na","لا ينطبق"]])}</select><select id="ed-fu-${it.k}" aria-label="متابعة">${opts(v.follow,[["yes","متابعة: نعم"],["no","متابعة: لا"]])}</select><div class="field" style="flex-basis:100%"><input type="text" id="ed-nt-${it.k}" value="${esc(v.note||"")}" placeholder="الملاحظة"></div></div>`}).join("")}</div>`;
+    if(d.status==="accepted")h+=`<div class="card"><div class="field"><label>ملاحظات الوردية المستلمة</label><textarea id="ed-inote">${esc(d.incomingNote||"")}</textarea></div></div>`;
+  } else {
+    const rs=(d.rounds||[]).slice().sort((a,b)=>a.no-b.no);
+    h+=`<div class="card"><div class="row"><div class="field"><label>حارس البوابة</label><input type="text" id="ed-gate" value="${esc(d.gateGuard||"")}"></div><div class="field"><label>حارس الجولة</label><input type="text" id="ed-patrol" value="${esc(d.patrolGuard||"")}"></div></div></div>`;
+    h+=rs.map(r=>`<div class="edround"><div class="row" style="justify-content:space-between;align-items:center"><span class="roundno">جولة ${r.no}</span><label class="lockline"><input type="checkbox" id="ed-del-${esc(r.id)}"> حذف هذه الجولة</label></div>
+      <div class="row"><div class="field" style="flex:0 1 140px"><label>البدء</label><input type="time" id="ed-s-${esc(r.id)}" value="${esc(r.start)}"></div><div class="field" style="flex:0 1 140px"><label>الانتهاء</label><input type="time" id="ed-e-${esc(r.id)}" value="${esc(r.end||"")}"></div><div class="field" style="flex:0 1 160px"><label>توقيع مختصر</label><input type="text" id="ed-i-${esc(r.id)}" value="${esc(r.initials||"")}"></div></div>
+      <div class="edareas">${AREAS.map(a=>`<div class="field"><label>${esc(a.ar)}</label><select id="ed-a-${esc(r.id)}-${a.k}">${opts(r.areas?.[a.k]||"",[["ok","✓ تم التحقق"],["issue","✗ توجد ملاحظة"],["na","N/A لا ينطبق"],["","— غير محدد"]])}</select></div>`).join("")}</div>
+      <div class="row"><div class="field"><label>الملاحظة / الحالة</label><input type="text" id="ed-o-${esc(r.id)}" value="${esc(r.observation||"")}"></div><div class="field"><label>الإجراء / التصعيد</label><input type="text" id="ed-x-${esc(r.id)}" value="${esc(r.action||"")}"></div></div></div>`).join("")||`<div class="empty">لا توجد جولات</div>`;
+  }
+  h+=`<div class="card" style="border-color:var(--warn)"><div class="field"><label class="req">سبب التعديل <span class="en">Reason — saved in the record's change log</span></label><input type="text" id="ed-reason" placeholder="مثال: تصحيح اسم الحارس / خطأ في وقت الجولة"></div></div>`;
+  $("#modal").innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="تعديل">
+    <div class="mhead"><div><b>تعديل: ${f.title}</b> <span class="formcode">${f.code}</span><div class="muted" style="font-size:.82rem">${esc(dG(d.date))} · ${esc(d.shiftName||"")}</div></div>
+    <div class="row"><button class="btn" data-act="edCancel">إلغاء</button><button class="btn primary" data-act="edSave">حفظ التعديل</button></div></div>
+    <div class="mbody"><div class="edgrid">${h}</div></div></div>`;
+}
+async function saveEdit(){
+  const reason=val("ed-reason").trim();if(!reason){toast("اكتب سبب التعديل","bad");$("#ed-reason")?.focus();return}
+  const {type,id,d}=DET;const now=isoNow();let upd={};
+  if(type==="handover"){
+    const items=clone(d.items||{});
+    for(const it of ITEMS){items[it.k]={...(items[it.k]||{}),status:val("ed-st-"+it.k),follow:val("ed-fu-"+it.k),note:val("ed-nt-"+it.k).trim()}}
+    const mp=key=>(d[key]||[]).map((p,i)=>({...p,name:val(`ed-${key}-${i}-name`).trim(),time:val(`ed-${key}-${i}-time`)}));
+    upd={items,outgoing:mp("outgoing"),incoming:mp("incoming")};
+    if(d.status==="accepted")upd.incomingNote=val("ed-inote").trim();
+  } else {
+    const rounds=(d.rounds||[]).filter(r=>!document.getElementById("ed-del-"+r.id)?.checked).map(r=>({...r,start:val("ed-s-"+r.id),end:val("ed-e-"+r.id),initials:val("ed-i-"+r.id).trim(),observation:val("ed-o-"+r.id).trim(),action:val("ed-x-"+r.id).trim(),areas:Object.fromEntries(AREAS.map(a=>[a.k,val(`ed-a-${r.id}-${a.k}`)||null]))}));
+    upd={gateGuard:val("ed-gate").trim(),patrolGuard:val("ed-patrol").trim(),rounds};
+  }
+  upd.edits=[...(d.edits||[]),{at:now,by:S.uid,reason}];upd.updatedAt=now;upd.updatedBy=S.uid;
+  const ref=S.db.doc((type==="handover"?"handovers/":"patrols/")+id);
+  const btn=$('[data-act="edSave"]');if(btn)btn.disabled=true;
+  try{await enqueue(ref.path,()=>ref.update(upd));DET.d={...d,...upd};toast("تم حفظ التعديل ✓");showDetail()}catch(e){if(btn)btn.disabled=false}
+}
+function editsLog(d){if(!d.edits||!d.edits.length)return "";return `<div class="sp"></div><table><tr><th colspan="2" class="sec">سجل التعديلات<span class="en">Change log (supervisor edits)</span></th></tr>${d.edits.map(e=>`<tr><td class="c" style="width:150px">${esc(fmtStamp(e.at))}</td><td>${esc(e.reason||"")}</td></tr>`).join("")}</table>`}
+function closeModal(){$("#modal").hidden=true;$("#modal").innerHTML="";document.body.style.overflow="";DET=null}
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#modal").hidden)closeModal()});
+
+async function saveFile(filename,data){
+  if(!S.dl){toast("التنزيل غير متاح في هذا العرض","bad");return}
+  try{await S.dl.save({filename,data});toast("تم حفظ الملف")}catch(e){if(e&&e.code==="declined")return;if(e&&e.code==="rate_limited"){toast("انتظر قليلاً ثم حاول مرة أخرى","bad");return}toast("تعذّر التنزيل","bad")}
+}
+function downloadOne(){
+  const {type,d,names}=DET;const f=FORMS[type];
+  const html=`\x3c!doctype html>\x3chtml lang="ar" dir="rtl">\x3chead>\x3cmeta charset="utf-8">\x3ctitle>${f.title} ${d.date} ${esc(d.shiftName||"")}\x3c/title>\x3clink rel="stylesheet" href="https:\/\/fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap">\x3cstyle>body{margin:0;padding:16px;background:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}:root{--f-mono:"IBM Plex Mono",monospace}@page{size:A4 ${type==="patrol"?"landscape":"portrait"};margin:10mm}${OF_CSS()} .of{min-width:0;padding:0}\x3c/style>\x3c/head>\x3cbody>${type==="handover"?officialHandover(d,names):officialPatrol(d,names)}\x3c/body>\x3c/html>`;
+  saveFile(`${f.code.replace("/","-")}_${d.date}_${(d.shiftName||d.shiftId||"").replace(/\s+/g,"-")}.html`,html);
+}
+async function deleteRecord(){
+  const {type,id}=DET;try{const ref=S.db.doc((type==="handover"?"handovers/":"patrols/")+id);await enqueue(ref.path,()=>ref.delete());toast("تم حذف السجل");closeModal()}catch(e){}
+}
+function loadXLSX(){return new Promise((res,rej)=>{if(window.XLSX)return res(window.XLSX);const s=document.createElement("script");s.src="https:\/\/cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=()=>res(window.XLSX);s.onerror=()=>rej(new Error("load"));document.head.appendChild(s)})}
+async function exportXlsx(){
+  let X;try{X=await loadXLSX()}catch(e){toast("تعذّر تحميل أداة Excel","bad");return}
+  const items=recItems();
+  const hRows=items.filter(x=>x.type==="handover").map(x=>{const d=x.d;const r={"التاريخ":d.date,"الوردية المسلِّمة":d.shiftName,"الوردية المستلمة":d.nextShiftName,"الحالة":d.status==="accepted"?"مُستلَمة":"بانتظار الاستلام",
+    "المسلِّم 1":d.outgoing?.[0]?.name||"","وقت المسلِّم 1":d.outgoing?.[0]?.time||"","المسلِّم 2":d.outgoing?.[1]?.name||"","المستلم 1":d.incoming?.[0]?.name||"","وقت المستلم 1":d.incoming?.[0]?.time||"","المستلم 2":d.incoming?.[1]?.name||""};
+    for(const it of ITEMS){const v=d.items?.[it.k]||{};r[it.ar+" - الحالة"]=ST_LBL[v.status]||"";r[it.ar+" - متابعة"]=v.follow==="yes"?(d.followups?.[it.k]?.closed?"نعم (مغلقة)":"نعم"):v.follow==="no"?"لا":"";r[it.ar+" - ملاحظة"]=v.note||""}
+    r["ملاحظات المستلم"]=d.incomingNote||"";r["وقت التسليم"]=fmtStamp(d.submittedAt);r["وقت الاستلام"]=fmtStamp(d.acceptedAt);return r});
+  const pRows=[];items.filter(x=>x.type==="patrol").forEach(x=>{const d=x.d;(d.rounds||[]).slice().sort((a,b)=>a.no-b.no).forEach(rd=>{const r={"التاريخ":d.date,"الوردية":d.shiftName,"حارس البوابة":d.gateGuard||"","حارس الجولة":d.patrolGuard||"","رقم الجولة":rd.no,"وقت البدء":rd.start,"وقت الانتهاء":rd.end||"جارية"};
+    for(const a of AREAS){const v=rd.areas?.[a.k];r[a.ar]=v==="ok"?"✓":v==="issue"?"✗":v==="na"?"N/A":""}r["الملاحظة / الحالة"]=rd.observation||"";r["الإجراء المتخذ / التصعيد"]=rd.action||"";r["توقيع مختصر"]=rd.initials||"";pRows.push(r)})});
+  if(!hRows.length&&!pRows.length){toast("لا توجد بيانات للتصدير في هذه الفترة","bad");return}
+  const wb=X.utils.book_new();wb.Workbook={Views:[{RTL:true}]};
+  if(hRows.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(hRows),"تسليم الوردية 37-1");
+  if(pRows.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(pRows),"الجولات الأمنية 37-5");
+  const buf=X.write(wb,{bookType:"xlsx",type:"array"});
+  saveFile(`Security-Logs_${RF.from}_to_${RF.to}.xlsx`,new Uint8Array(buf));
+}
+
+/* ---------- SETTINGS (owner) ---------- */
+let SETF=null;
+function renderSettings(){
+  if(!SETF){SETF=clone(S.settings);if(GAS)SETF.guards=clone(S.guardObjs||[])}
+  $("#view").innerHTML=`<div class="stack">
+    <div class="pagetitle"><div><h2>الإعدادات</h2><div class="en">Owner only · shifts and guard names</div></div></div>
+    <div class="grid2">
+      <div class="card"><div class="cardhead"><div><h3>الورديات</h3><div class="en">Shift names and times (used to auto-detect the current shift)</div></div></div>
+        <div id="shiftrows">${SETF.shifts.map((s,i)=>`<div class="shiftrow">
+          <div class="field"><label>الاسم</label><input type="text" id="sh-name-${i}" data-sf="shifts.${i}.name" value="${esc(s.name)}"></div>
+          <div class="field"><label>من</label><input type="time" id="sh-start-${i}" data-sf="shifts.${i}.start" value="${esc(s.start)}"></div>
+          <div class="field"><label>إلى</label><input type="time" id="sh-end-${i}" data-sf="shifts.${i}.end" value="${esc(s.end)}"></div>
+          <button class="btn ghost" data-act="shDel" data-i="${i}" ${SETF.shifts.length<2?"disabled":""}>حذف</button></div>`).join("")}</div>
+        <div class="row" style="margin-top:10px"><button class="btn" data-act="shAdd">+ إضافة وردية</button></div>
+        <div class="field" style="margin-top:14px;max-width:260px"><label>تاريخ بدء التشغيل <span class="en">Go-live date</span></label><input type="date" id="set-start" value="${esc(SETF.startDate||"")}"></div>
+        <p class="muted" style="font-size:.82rem">الترتيب مهم: الوردية التالية في القائمة هي التي تستلم. مثال لنظام 12 ساعة: نهارية 08:00–20:00 وليلية 20:00–08:00.</p>
+      </div>
+      ${GAS?guardsCardGas():""}<div class="card" ${GAS?"hidden":""}><div class="cardhead"><div><h3>أسماء أفراد الأمن</h3><div class="en">Suggested names in the guard fields</div></div><span class="chip brand">${SETF.guards.length}</span></div>
+        <div class="row"><div class="field"><input type="text" id="g-new" placeholder="اسم الحارس"></div><button class="btn" data-act="gAdd">إضافة</button></div>
+        <div class="gl" style="margin-top:12px">${SETF.guards.length?SETF.guards.map((g,i)=>`<span class="chip">${esc(g)}<button data-act="gDel" data-i="${i}" aria-label="حذف">×</button></span>`).join(""):'<span class="muted">لم تُضف أسماء بعد — يمكن للحراس كتابة أسمائهم يدوياً.</span>'}</div>
+      </div>
+    </div>
+    <div class="card"><div class="cardhead"><div><h3>سجل البوابة <span class="formcode">37-3 · 37-6</span></h3><div class="en">Visitors / contractors / suppliers · Employee permission exits</div></div><span class="chip ${SETF.gateForGuards?"ok":"warn"}">${SETF.gateForGuards?"مفعّل للحراس":"تجريبي — لك فقط"}</span></div>
+      <label style="display:flex;gap:10px;align-items:center;font-weight:600"><input type="checkbox" id="set-gate" ${SETF.gateForGuards?"checked":""} style="width:20px;height:20px"> إتاحة تبويب «البوابة» للحراس</label>
+      <p class="muted" style="font-size:.85rem">وهو مقفل يظهر التبويب لك وحدك للتجربة، والخادم يرفض أي تسجيل أو قراءة من الحراس. لما تكون جاهز ضع العلامة واضغط «حفظ الإعدادات». سجلات التجربة احذفها من سجل اليوم قبل التفعيل.</p>
+      <div class="row"><button class="btn" data-act="go" data-v="gate">${ICONS.gate}فتح البوابة</button></div></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-act="setReset">تراجع عن التغييرات</button><button class="btn primary" data-act="setSave" ${dis()}>حفظ الإعدادات</button></div>
+    <div class="card" ${GAS?"hidden":""}><div class="cardhead"><div><h3>البيانات التجريبية</h3><div class="en">Example records (marked "مثال")</div></div><button class="btn danger" data-act="exDel" ${dis()}>حذف كل الأمثلة</button></div><p class="muted" style="font-size:.85rem;margin:0">سجلات توضيحية لآخر أيام وجولات اليوم، أسماؤها مكتوب بجانبها "(مثال)". احذفها قبل أن يبدأ الفريق التعبئة الفعلية — لا تؤثر على أي سجل حقيقي.</p></div>
+    ${GAS?gasHelpCard():""}<div class="card" ${GAS?"hidden":""}><h3>إضافة فريق الأمن</h3><div class="en" style="margin-bottom:8px">How your team gets access</div>
+      <ol class="steps">
+        <li>من زر <b>المشاركة (Share)</b> أعلى الصفحة، أضف بريد كل فرد في الفريق.</li>
+        <li>امنحهم صلاحية تسمح بالتعديل (<b>Editor</b>، أو <b>Contributor</b> إذا كانت منشأتكم على خطة Team/Enterprise) — صلاحية "عرض فقط" لا تسمح بتعبئة السجلات.</li>
+        <li>كل فرد يفتح الرابط من جواله بعد تسجيل الدخول بحساب Claude، ويُفضّل إضافته للشاشة الرئيسية.</li>
+        <li>لا تفعّل "المشاركة عبر رابط عام" حتى تبقى الصلاحيات بالبريد فقط.</li>
+      </ol>
+      <p class="muted" style="font-size:.85rem;margin-bottom:0"><b>صلاحيات الحراس:</b> تسجيل جديد فقط للوردية الحالية (والسابقة لإكمال التسليم). بعد إنهاء الجولة أو إرسال التسليم يُقفل السجل ولا يستطيعون تعديله أو حذفه، ولا تسجيل ورديات قديمة. <b>لك وحدك:</b> التعديل (مع سبب يُحفظ في سجل التعديلات)، الحذف، إغلاق المتابعات، والإعدادات.</p>
+    </div></div>`;
+}
+document.addEventListener("input",e=>{if(e.target.id==="set-start"&&SETF)SETF.startDate=e.target.value});
+document.addEventListener("input",e=>{const el=e.target.closest("[data-sf]");if(!el||!SETF)return;const k=el.dataset.sf.split(".");SETF[k[0]][+k[1]][k[2]]=el.value});
+async function saveSettings(){
+  for(const s of SETF.shifts){if(!s.name.trim()||!s.start||!s.end){toast("أكمل بيانات كل وردية","bad");return}}
+  let guards=SETF.guards;
+  if(GAS){guards=SETF.guards.map(g=>({name:String(g.name||"").trim(),pin:String(g.pin||"").trim()})).filter(g=>g.name||g.pin);
+    for(const g of guards){if(!g.name||!g.pin){toast("لكل حارس اسم ورقم سري","bad");return}if(!/^\d{4,12}$/.test(g.pin)){toast(`الرقم السري لـ ${g.name} يكون 4 أرقام أو أكثر`,"bad");return}}
+    const seen={};for(const g of guards){if(seen[g.pin]){toast(`الرقم ${g.pin} مكرر`,"bad");return}seen[g.pin]=1}}
+  const data={shifts:SETF.shifts.map(s=>({id:s.id,name:s.name.trim(),start:s.start,end:s.end})),guards,startDate:SETF.startDate||"",gateForGuards:!!SETF.gateForGuards,updatedAt:isoNow(),updatedBy:S.uid};
+  const ref=S.db.doc("config/settings");
+  try{await enqueue(ref.path,()=>ref.set(data));toast("تم حفظ الإعدادات")}catch(e){}
+}
+
+/* ---------- generic binding + actions ---------- */
+const ROOTS={hf:()=>HF,ir:()=>IR,pr:()=>PR.active,ph:()=>PH};
+function setPath(o,path,val){const k=path.split(".");for(let i=0;i<k.length-1;i++)o=o[k[i]];o[k[k.length-1]]=val}
+function getPath(o,path){return path.split(".").reduce((a,k)=>a?.[k],o)}
+document.addEventListener("input",e=>{
+  const el=e.target.closest("[data-bind]");if(!el||el.tagName==="BUTTON")return;
+  const [root,...rest]=el.dataset.bind.split(".");const o=ROOTS[root]?.();if(!o)return;
+  setPath(o,rest.join("."),el.type==="checkbox"?el.checked:el.value);
+  if(root==="hf")saveHDraft();
+  else if(root==="pr")schedulePatrolSave(900);
+  else if(root==="ph"){clearTimeout(phTimer);phTimer=setTimeout(()=>{if(canEditData())writePatrol({gateGuard:PH.gateGuard.trim(),patrolGuard:PH.patrolGuard.trim()}).catch(()=>{})},1000)}
+});
+document.addEventListener("change",e=>{
+  const id=e.target.id;
+  if(id==="h-date"||id==="h-shift"){HSel.date=$("#h-date").value||HSel.date;HSel.shiftId=$("#h-shift").value;subscribeHandover();renderHandover()}
+  else if(id==="p-date"||id==="p-shift"){PSel.date=$("#p-date").value||PSel.date;PSel.shiftId=$("#p-shift").value;if(prTimer){clearTimeout(prTimer);prTimer=null;savePatrolRounds()}subscribePatrol();renderPatrol()}
+  else if(id==="rf-from"||id==="rf-to"){const f=$("#rf-from").value,t=$("#rf-to").value;if(f&&t&&f<=t){RF.from=f;RF.to=t;subscribeRecords();renderRecList()}}
+  else if(id==="rf-type"||id==="rf-shift"||id==="rf-flag"){RF.type=$("#rf-type").value;RF.shift=$("#rf-shift").value;RF.flag=$("#rf-flag").value;renderRecList()}
+});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches('td.cell[data-act]')){e.preventDefault();e.target.click()}});
+document.addEventListener("click",e=>{
+  const ah=e.target.closest('a[href^="#"]');
+  if(ah){e.preventDefault();const v=ah.getAttribute("href").slice(1);if(v)go(v);return}
+  const el=e.target.closest("[data-act]");if(!el||el.disabled)return;
+  const a=el.dataset.act;
+  if(a==="go")go(el.dataset.v);
+  else if(a==="seg"){
+    const [root,...rest]=el.dataset.bind.split(".");const o=ROOTS[root]?.();if(!o)return;const path=rest.join(".");
+    const cur=getPath(o,path);const val=cur===el.dataset.val?null:el.dataset.val;setPath(o,path,val);
+    if(root==="hf"){const k=rest[1];const v=HF.items[k];if(rest[2]==="status"&&val&&!v.follow)v.follow=val==="remark"?"yes":"no";$("#ck-"+k).outerHTML=itemRow(ITEMS.find(i=>i.k===k),false);saveHDraft();if(val==="remark")$(`#ck-${k} textarea`)?.focus()}
+    else if(root==="pr"){const k=rest[1];$("#ar-"+k).outerHTML=areaRow(AREAS.find(x=>x.k===k),PR.active);schedulePatrolSave(400);if(val==="issue")toast("اكتب الملاحظة والإجراء المتخذ قبل إنهاء الجولة")}
+  }
+  else if(a==="hNow"){const c=currentShift();HSel.date=c.date;HSel.shiftId=c.shift.id;subscribeHandover();renderHandover()}
+  else if(a==="pNow"){const c=currentShift();PSel.date=c.date;PSel.shiftId=c.shift.id;subscribePatrol();renderPatrol()}
+  else if(a==="hSubmit")submitHandover();
+  else if(a==="hAccept")acceptHandover();
+  else if(a==="rStart")startRound();
+  else if(a==="rEnd")endRound();
+  else if(a==="rCancel"){if(!PR.active)return;if(!el.dataset.armed){el.dataset.armed="1";el.textContent="اضغط مرة أخرى للتأكيد";setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent="إلغاء الجولة"}},4000);return}const id=PR.active.id;PR.active=null;PR.renderedId=null;clearTimeout(prTimer);prTimer=null;const rounds=(PD.doc?.rounds||[]).filter(r=>r.id!==id);writePatrol({rounds}).catch(()=>{});renderActive();toast("أُلغيت الجولة")}
+  else if(a==="rDel"){const id=el.dataset.id;if(el.dataset.armed){const rounds=(PD.doc?.rounds||[]).filter(r=>r.id!==id);writePatrol({rounds}).then(()=>toast("حُذفت الجولة")).catch(()=>{})}else{el.dataset.armed="1";el.textContent="تأكيد الحذف";el.classList.add("danger");setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent="حذف";el.classList.remove("danger")}},4000)}}
+  else if(a==="openShift"){HSel.date=el.dataset.d;HSel.shiftId=el.dataset.s;go("handover")}
+  else if(a==="detail")openDetail(el.dataset.type,el.dataset.id);
+  else if(a==="closeModal")closeModal();
+  else if(a==="dlOne")downloadOne();
+  else if(a==="delAsk")showDetail(true);
+  else if(a==="delNo")showDetail(false);
+  else if(a==="delYes")deleteRecord();
+  else if(a==="exportX")exportXlsx();
+  else if(a==="fuOpen"){const box=$(`#fu-${CSS.escape(el.dataset.id)}-${el.dataset.k}`);if(box){box.hidden=false;el.hidden=true;box.querySelector("input")?.focus()}}
+  else if(a==="fuClose"){const id=el.dataset.id,k=el.dataset.k;const note=($(`#funote-${CSS.escape(id)}-${k}`)?.value||"").trim();if(!note){toast("اكتب الإجراء المتخذ لإغلاق المتابعة","bad");return}
+    const ref=S.db.doc("handovers/"+id);enqueue(ref.path,()=>ref.update({followups:{[k]:{closed:true,closedAt:isoNow(),closedBy:S.uid,note}},updatedAt:isoNow(),updatedBy:S.uid})).then(()=>toast("أُغلقت المتابعة ✓")).catch(()=>{})}
+  else if(a==="gAdd"){const v=($("#g-new").value||"").trim();if(v&&!SETF.guards.includes(v)){SETF.guards.push(v);renderSettings();$("#g-new")?.focus()}}
+  else if(a==="gDel"){SETF.guards.splice(+el.dataset.i,1);renderSettings()}
+  else if(a==="shAdd"){SETF.shifts.push({id:"S"+Date.now().toString(36),name:"وردية جديدة",start:"00:00",end:"08:00"});renderSettings()}
+  else if(a==="shDel"){SETF.shifts.splice(+el.dataset.i,1);renderSettings()}
+  else if(a==="setReset"){SETF=null;renderSettings()}
+  else if(a==="gpAdd"){SETF.guards.push({name:"",pin:""});renderSettings();const i=SETF.guards.length-1;$("#gp-name-"+i)?.focus()}
+  else if(a==="gpDel"){SETF.guards.splice(+el.dataset.i,1);renderSettings()}
+  else if(a==="gpGen"){const used=new Set(SETF.guards.map(g=>g.pin).filter(Boolean));SETF.guards.forEach(g=>{if(!g.pin){let p;do{p=String(1000+Math.floor(Math.random()*9000))}while(used.has(p));used.add(p);g.pin=p}});renderSettings()}
+  else if(a==="openSheet"){gas("sheetUrl").then(r=>{$("#sheetlink").innerHTML=`<a class="btn primary" href="${esc(r.url)}" target="_blank" rel="noopener">افتح الجدول ↗</a>`}).catch(e=>toast(e.message||"تعذّر","bad"))}
+  else if(a==="logout"){lsSet("sec-pin",null);lsSet("sec-who",null);AUTH.pin=null;doLogout(STORE.pending()?"لديك "+STORE.pending()+" سجلات محفوظة في الجوال — ستُرسل تلقائياً عند توفر النت":"")}
+  else if(a==="syncNow"){STORE.sync();if(S.db&&S.db.refresh)S.db.refresh();if(!NET.online)toast("جارٍ محاولة الاتصال…")}
+  else if(a==="setSave")saveSettings();
+  else if(a==="hPick"){HSel.date=el.dataset.d;HSel.shiftId=el.dataset.s;subscribeHandover();renderHandover()}
+  else if(a==="edOpen"){if(S.isOwner)showEdit()}
+  else if(a==="edCancel")showDetail();
+  else if(a==="edSave")saveEdit();
+  else if(a==="exDel"){if(!el.dataset.armed){el.dataset.armed="1";el.textContent="اضغط مرة أخرى للتأكيد";setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent="حذف كل الأمثلة"}},4000);return}el.disabled=true;el.textContent="جارٍ الحذف…";deleteExamples()}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="g-new"){e.preventDefault();$('[data-act="gAdd"]')?.click()}});
+window.addEventListener("resize",()=>{/* keep pads crisp on rotate */});
+
+/* ---------- boot ---------- */
+route();renderBanner();
+setInterval(()=>{renderPill();if(S.view==="home"&&$("#modal").hidden&&!document.activeElement?.matches("input,textarea"))renderHome()},60000);
+(async()=>{
+  if(GAS){gasBoot();return}
+  if(!window.claude||typeof window.claude.use!=="function"){S.offline=true;S.ready=true;renderBanner();route();return}
+  const [db,user,dl]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("downloads")]);
+  S.db=db;S.user=user;S.dl=dl;
+  if(!db){S.offline=true;S.ready=true;renderBanner();route();return}
+  if(user){S.uid=await user.id();S.isOwner=await user.isOwner();const cw=await user.can("data.write");if(cw===false)S.canWrite=false}
+  startSubs(db);
+})();
+if(GAS&&!HAS_RUN&&"serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(e=>console.warn(e)));
+function startSubs(db){
+  S.ready=true;renderBanner();renderTabs();
+  db.doc("config/settings").onSnapshot(snap=>{
+    if(snap.exists){const d=snap.data();S.settings={startDate:d.startDate||"",gateForGuards:!!d.gateForGuards,shifts:(d.shifts&&d.shifts.length?d.shifts:DEFAULT_SETTINGS.shifts),guards:(d.guards||[]).map(g=>typeof g==="string"?g:g.name).filter(Boolean)};S.guardObjs=(d.guards||[]).filter(g=>g&&typeof g==="object").map(g=>({name:g.name||"",pin:String(g.pin||"")}))}
+    renderBanner();renderTabs();if(S.view==="gate"&&!gateOn())go("home");
+    if(S.view!=="settings"){SETF=null;if(!$("#modal").hidden||document.activeElement?.matches("input,textarea"))return;if(S.view==="home")renderHome();renderPill()}
+  },e=>console.warn(e));
+  const from=addDays(ymd(new Date()),-45);
+  db.collection("handovers").where("date",">=",from).limit(1000).onSnapshot(snap=>{S.recent.handovers=new Map(snap.docs.map(d=>[d.id,d.data()]));S.recent.loaded.h=true;if(homeSafe())renderHome()},e=>console.warn(e));
+  db.collection("patrols").where("date",">=",from).limit(1000).onSnapshot(snap=>{S.recent.patrols=new Map(snap.docs.map(d=>[d.id,d.data()]));S.recent.loaded.p=true;if(homeSafe())renderHome()},e=>console.warn(e));
+  route();
+}
+</script>
+
 </body>
 </html>
