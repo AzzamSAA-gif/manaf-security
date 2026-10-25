@@ -344,12 +344,12 @@ footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;c
   </header>
   <div class="wrap" id="banner"></div>
   <main class="wrap" id="view"></main>
-  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.1</b> · يعمل بدون إنترنت</div></div></footer>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.2</b> · يعمل بدون إنترنت</div></div></footer>
 </div>
 <div id="modal" hidden dir="rtl"></div>
 <div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
 <form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
-<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.1</b> · يعمل بدون إنترنت</div></div></div>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.2</b> · يعمل بدون إنترنت</div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -1172,12 +1172,45 @@ function renderGateLog(){
     <div class="row" style="align-items:flex-end;margin-bottom:10px"><div class="field" style="flex:0 1 180px"><label>التاريخ <span class="en">Date</span></label><input type="date" id="g-day" value="${esc(G.day)}" max="${ymd(new Date())}" ${S.isOwner?"":`min="${esc(addDays(ymd(new Date()),-30))}"`}></div>
       <button class="btn" data-act="gOfficial">${ICONS.records}النموذج الرسمي</button>${S.isOwner?`<button class="btn" data-act="gExport">${ICONS.download}تصدير Excel</button>`:""}</div>
     ${rows.length?`<div class="rounds"><table class="tbl"><thead><tr><th class="c">رقم</th>${head.map(h=>`<th>${h}</th>`).join("")}${own?"<th></th>":""}</tr></thead><tbody>
-    ${rows.map(([id,d],i)=>G.tab==="v"?`<tr><td class="c">${i+1}</td><td><b>${esc(d.name)}</b>${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td class="mono">${esc(d.idNo)}</td><td>${esc(d.company||"")}</td><td>${esc(catL(d.category))}</td><td>${esc(d.plate||"")}</td><td>${esc(d.purpose||"")}</td><td>${esc(d.host||"")}</td><td class="mono">${esc(d.timeIn)}</td><td class="mono">${d.timeOut?esc(d.timeOut):'<span class="chip warn">داخل</span>'}</td><td>${esc(d.inBy||"")}${d.outBy&&d.outBy!==d.inBy?` / ${esc(d.outBy)}`:""}</td>${own?gDelBtn("visits",id):""}</tr>`
-      :`<tr><td class="c">${i+1}</td><td class="mono">${esc(d.empNo||"")}</td><td><b>${esc(d.name)}</b>${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td>${esc(d.dept||"")}</td><td>${esc(etL(d.exitType))}</td><td>${esc(d.reason||"")}</td><td>${esc(d.approvedBy||"")}</td><td class="mono">${esc(d.exitTime)}</td><td class="mono">${d.exitType==="final"?"—":d.returnTime?esc(d.returnTime):'<span class="chip warn">خارج</span>'}</td><td>${esc(d.outBy||"")}${d.returnBy&&d.returnBy!==d.outBy?` / ${esc(d.returnBy)}`:""}</td>${own?gDelBtn("exits",id):""}</tr>`).join("")}
+    ${rows.map(([id,d],i)=>G.tab==="v"?`<tr><td class="c">${i+1}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td class="mono">${esc(d.idNo)}</td><td>${esc(d.company||"")}</td><td>${esc(catL(d.category))}</td><td>${esc(d.plate||"")}</td><td>${esc(d.purpose||"")}</td><td>${esc(d.host||"")}</td><td class="mono">${esc(d.timeIn)}</td><td class="mono">${d.timeOut?esc(d.timeOut):'<span class="chip warn">داخل</span>'}</td><td>${esc(d.inBy||"")}${d.outBy&&d.outBy!==d.inBy?` / ${esc(d.outBy)}`:""}</td>${own?gDelBtn("visits",id):""}</tr>`
+      :`<tr><td class="c">${i+1}</td><td class="mono">${esc(d.empNo||"")}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td>${esc(d.dept||"")}</td><td>${esc(etL(d.exitType))}</td><td>${esc(d.reason||"")}</td><td>${esc(d.approvedBy||"")}</td><td class="mono">${esc(d.exitTime)}</td><td class="mono">${d.exitType==="final"?"—":d.returnTime?esc(d.returnTime):'<span class="chip warn">خارج</span>'}</td><td>${esc(d.outBy||"")}${d.returnBy&&d.returnBy!==d.outBy?` / ${esc(d.returnBy)}`:""}</td>${own?gDelBtn("exits",id):""}</tr>`).join("")}
     </tbody></table></div>`:`<div class="empty"><b>لا توجد سجلات لهذا اليوم</b></div>`}
     ${S.isOwner?"":`<div class="lockline" style="margin-top:8px">🔒 بعد الحفظ لا يمكن تعديل السجل — المسموح تسجيل الخروج/العودة فقط. للتصحيح راجع مسؤول السلامة.</div>`}`;
 }
-const gDelBtn=(c,id)=>`<td><button class="btn ghost" data-act="gateDel" data-c="${c}" data-id="${esc(id)}">حذف</button></td>`;
+const gDelBtn=(c,id)=>`<td style="white-space:nowrap"><button class="btn ghost" data-act="gateEdit" data-c="${c}" data-id="${esc(id)}">تعديل</button> <button class="btn ghost" data-act="gateDel" data-c="${c}" data-id="${esc(id)}">حذف</button></td>`;
+/* supervisor edit of a gate record — every change keeps a reason in the record's change log */
+let GE=null;
+function showGateEdit(c,id){
+  const d=(c==="visits"?G.v:G.e).get(id);if(!d||!S.isOwner)return;GE={c,id,d:clone(d)};
+  const F=(k,l,o={})=>`<div class="field ${o.wide?"wide":""}"><label>${l}</label><input type="${o.time?"time":"text"}" id="ge-${k}" value="${esc(d[k]||"")}" ${o.num?'inputmode="numeric"':""}></div>`;
+  const SEL=(k,l,list)=>`<div class="field"><label>${l}</label><select id="ge-${k}">${list.map(([x,t])=>`<option value="${x}" ${d[k]===x?"selected":""}>${t}</option>`).join("")}</select></div>`;
+  const body=c==="visits"
+    ?F("name","الاسم")+F("idNo","الهوية / الإقامة / الجواز")+F("company","الشركة")+SEL("category","الفئة",V_CAT)+F("plate","رقم اللوحة")+F("purpose","غرض الزيارة")+F("host","الإدارة / المستضيف")+F("timeIn","وقت الدخول",{time:1})+F("timeOut","وقت الخروج (فاضي = لسا داخل)",{time:1})+F("notes","ملاحظات",{wide:1})
+    :F("empNo","الرقم الوظيفي",{num:1})+F("name","اسم الموظف")+F("dept","القسم")+SEL("exitType","نوع الخروج",E_TYPE)+F("reason","سبب الاستئذان")+F("approvedBy","المسؤول المعتمد")+F("exitTime","وقت الخروج",{time:1})+F("returnTime","وقت العودة (فاضي = لسا خارج)",{time:1})+F("notes","ملاحظات",{wide:1});
+  const log=(d.edits||[]).length?`<div class="card"><h3>سجل التعديلات</h3>${d.edits.map(x=>`<div class="edrow"><span class="mono" style="min-width:130px">${esc(fmtStamp(x.at))}</span><span>${esc(x.reason||"")}</span></div>`).join("")}</div>`:"";
+  $("#modal").innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="تعديل">
+    <div class="mhead"><div><b>تعديل: ${c==="visits"?"سجل الزوار والمقاولين":"استئذان الموظفين"}</b> <span class="formcode">${c==="visits"?"37-3":"37-6"}</span><div class="muted" style="font-size:.82rem">${esc(dG(d.date))} · ${esc(d.shiftName||"")} · ${esc(d.name||"")}</div></div>
+    <div class="row"><button class="btn" data-act="geCancel">إلغاء</button><button class="btn primary" data-act="geSave">حفظ التعديل</button></div></div>
+    <div class="mbody"><div class="edgrid"><div class="card"><div class="gform">${body}</div></div>${log}
+    <div class="card" style="border-color:var(--warn)"><div class="field"><label class="req">سبب التعديل <span class="en">Reason — saved in the record's change log</span></label><input type="text" id="ge-why" placeholder="مثال: تصحيح رقم الهوية / وقت الخروج"></div></div></div></div></div>`;
+  $("#modal").hidden=false;document.body.style.overflow="hidden";
+}
+async function saveGateEdit(btn){
+  if(!GE)return;const {c,id,d}=GE;const why=val("ge-why").trim();
+  if(!why){toast("اكتب سبب التعديل","bad");$("#ge-why")?.focus();return}
+  const keys=c==="visits"?["name","idNo","company","category","plate","purpose","host","timeIn","timeOut","notes"]:["empNo","name","dept","exitType","reason","approvedBy","exitTime","returnTime","notes"];
+  const upd={};keys.forEach(k=>{const x=val("ge-"+k).trim();if(x!==String(d[k]||""))upd[k]=x});
+  if(c==="exits"&&(upd.exitType||d.exitType)==="final"&&d.returnTime)upd.returnTime="";
+  if(!Object.keys(upd).length){toast("ما فيه أي تغيير","bad");return}
+  const nx={...d,...upd};
+  if(!String(nx.name||"").trim())return toast("الاسم مطلوب","bad");
+  if(c==="visits"&&!String(nx.idNo||"").trim())return toast("رقم الهوية مطلوب","bad");
+  if(c==="visits"&&!nx.timeIn)return toast("وقت الدخول مطلوب","bad");
+  if(c==="exits"&&!nx.exitTime)return toast("وقت الخروج مطلوب","bad");
+  const now=isoNow();upd.edits=[...(d.edits||[]),{at:now,by:S.uid,reason:why,fields:Object.keys(upd)}];upd.updatedAt=now;upd.updatedBy=S.uid;
+  const ref=S.db.doc(c+"/"+id);if(btn)btn.disabled=true;
+  try{await enqueue(ref.path,()=>ref.update(upd));(c==="visits"?G.v:G.e).set(id,{...d,...upd});GE=null;closeModal();updateGate();toast("تم حفظ التعديل ✓")}catch(e){if(btn)btn.disabled=false}
+}
 function idPrefill(){
   const id=String(G.vf.idNo||"").trim();if(!id)return;
   const prev=[...G.v.values()].filter(d=>String(d.idNo).trim()===id).sort((a,b)=>(b.date+b.timeIn).localeCompare(a.date+a.timeIn))[0];
@@ -1312,8 +1345,8 @@ function gateDownload(){
 async function gateExport(){
   let X;try{X=await loadXLSX()}catch(e){toast("تعذّر تحميل أداة Excel","bad");return}
   const byDate=(a,b,k)=>(a.date+a[k]).localeCompare(b.date+b[k]);
-  const v=[...G.v.values()].sort((a,b)=>byDate(a,b,"timeIn")).map(d=>({"التاريخ":d.date,"الوردية":d.shiftName||"","البوابة":d.gate||"","الاسم":d.name,"الهوية / الإقامة / الجواز":d.idNo,"الشركة":d.company||"","الفئة":catL(d.category),"رقم اللوحة":d.plate||"","غرض الزيارة":d.purpose||"","الإدارة / المستضيف":d.host||"","وقت الدخول":d.timeIn,"وقت الخروج":d.timeOut||"","حارس الدخول":d.inBy||"","حارس الخروج":d.outBy||"","ملاحظات":d.notes||""}));
-  const e=[...G.e.values()].sort((a,b)=>byDate(a,b,"exitTime")).map(d=>({"التاريخ":d.date,"الوردية":d.shiftName||"","البوابة":d.gate||"","الرقم الوظيفي":d.empNo||"","اسم الموظف":d.name,"القسم":d.dept||"","نوع الخروج":etL(d.exitType),"السبب":d.reason||"","المسؤول المعتمد":d.approvedBy||"","وقت الخروج":d.exitTime,"وقت العودة":d.exitType==="final"?"—":(d.returnTime||""),"حارس الخروج":d.outBy||"","حارس العودة":d.returnBy||"","ملاحظات":d.notes||""}));
+  const v=[...G.v.values()].sort((a,b)=>byDate(a,b,"timeIn")).map(d=>({"التاريخ":d.date,"الوردية":d.shiftName||"","البوابة":d.gate||"","الاسم":d.name,"الهوية / الإقامة / الجواز":d.idNo,"الشركة":d.company||"","الفئة":catL(d.category),"رقم اللوحة":d.plate||"","غرض الزيارة":d.purpose||"","الإدارة / المستضيف":d.host||"","وقت الدخول":d.timeIn,"وقت الخروج":d.timeOut||"","حارس الدخول":d.inBy||"","حارس الخروج":d.outBy||"","ملاحظات":d.notes||"","تعديلات المسؤول":(d.edits||[]).map(x=>fmtStamp(x.at)+" "+x.reason).join(" / ")}));
+  const e=[...G.e.values()].sort((a,b)=>byDate(a,b,"exitTime")).map(d=>({"التاريخ":d.date,"الوردية":d.shiftName||"","البوابة":d.gate||"","الرقم الوظيفي":d.empNo||"","اسم الموظف":d.name,"القسم":d.dept||"","نوع الخروج":etL(d.exitType),"السبب":d.reason||"","المسؤول المعتمد":d.approvedBy||"","وقت الخروج":d.exitTime,"وقت العودة":d.exitType==="final"?"—":(d.returnTime||""),"حارس الخروج":d.outBy||"","حارس العودة":d.returnBy||"","ملاحظات":d.notes||"","تعديلات المسؤول":(d.edits||[]).map(x=>fmtStamp(x.at)+" "+x.reason).join(" / ")}));
   if(!v.length&&!e.length){toast("لا توجد بيانات للتصدير","bad");return}
   const wb=X.utils.book_new();wb.Workbook={Views:[{RTL:true}]};
   if(v.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(v),"الزوار 37-3");
@@ -1344,6 +1377,9 @@ document.addEventListener("click",e=>{
   else if(a==="gOfficial")showGateOfficial();
   else if(a==="gDl")gateDownload();
   else if(a==="gExport")gateExport();
+  else if(a==="gateEdit")showGateEdit(el.dataset.c,el.dataset.id);
+  else if(a==="geSave")saveGateEdit(el);
+  else if(a==="geCancel"){GE=null;closeModal()}
   else if(a==="gateDel"){if(!S.isOwner||!armed(el,"تأكيد الحذف"))return;const c=el.dataset.c,id=el.dataset.id;const ref=S.db.doc(c+"/"+id);
     enqueue(ref.path,()=>ref.delete()).then(()=>{(c==="visits"?G.v:G.e).delete(id);updateGate();toast("حُذف السجل")}).catch(()=>{})}
 });
