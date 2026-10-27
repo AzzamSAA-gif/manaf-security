@@ -344,12 +344,12 @@ footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;c
   </header>
   <div class="wrap" id="banner"></div>
   <main class="wrap" id="view"></main>
-  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.3</b> · يعمل بدون إنترنت</div></div></footer>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.4</b> · يعمل بدون إنترنت</div></div></footer>
 </div>
 <div id="modal" hidden dir="rtl"></div>
 <div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
 <form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
-<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.3</b> · يعمل بدون إنترنت</div></div></div>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.4</b> · يعمل بدون إنترنت</div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -1166,22 +1166,24 @@ function updateGate(){
 }
 function dayRows(tab,day){const m=tab==="v"?G.v:G.e;return [...m].filter(([id,d])=>d.date===day).sort((a,b)=>String(tab==="v"?a[1].timeIn:a[1].exitTime).localeCompare(String(tab==="v"?b[1].timeIn:b[1].exitTime)))}
 function renderGateLog(){
-  const el=$("#g-log");if(!el)return;const rows=dayRows(G.tab,G.day);const own=S.isOwner&&canEditData();
+  const el=$("#g-log");if(!el)return;const rows=dayRows(G.tab,G.day);const own=canEditData()&&(S.isOwner||rows.some(([id,d])=>canFix(d)));
   const head=G.tab==="v"?["الاسم","الهوية","الشركة","الفئة","اللوحة","الغرض","المستضيف","الدخول","الخروج","الحارس"]:["الرقم الوظيفي","الاسم","القسم","النوع","السبب","المعتمد","الخروج","العودة","الحارس"];
   el.innerHTML=`<div class="cardhead"><div><h3>سجل اليوم</h3><div class="en">${G.tab==="v"?"Visitor / Contractor / Supplier Register":"Employee Permission / Exit Log"}</div></div><span class="chip brand">${rows.length}</span></div>
     <div class="row" style="align-items:flex-end;margin-bottom:10px"><div class="field" style="flex:0 1 180px"><label>التاريخ <span class="en">Date</span></label><input type="date" id="g-day" value="${esc(G.day)}" max="${ymd(new Date())}" ${S.isOwner?"":`min="${esc(addDays(ymd(new Date()),-30))}"`}></div>
       <button class="btn" data-act="gOfficial">${ICONS.records}النموذج الرسمي</button>${S.isOwner?`<button class="btn" data-act="gExport">${ICONS.download}تصدير Excel</button>`:""}</div>
     ${rows.length?`<div class="rounds"><table class="tbl"><thead><tr><th class="c">رقم</th>${head.map(h=>`<th>${h}</th>`).join("")}${own?"<th></th>":""}</tr></thead><tbody>
-    ${rows.map(([id,d],i)=>G.tab==="v"?`<tr><td class="c">${i+1}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td class="mono">${esc(d.idNo)}</td><td>${esc(d.company||"")}</td><td>${esc(catL(d.category))}</td><td>${esc(d.plate||"")}</td><td>${esc(d.purpose||"")}</td><td>${esc(d.host||"")}</td><td class="mono">${esc(d.timeIn)}</td><td class="mono">${d.timeOut?esc(d.timeOut):'<span class="chip warn">داخل</span>'}</td><td>${esc(d.inBy||"")}${d.outBy&&d.outBy!==d.inBy?` / ${esc(d.outBy)}`:""}</td>${own?gDelBtn("visits",id):""}</tr>`
-      :`<tr><td class="c">${i+1}</td><td class="mono">${esc(d.empNo||"")}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td>${esc(d.dept||"")}</td><td>${esc(etL(d.exitType))}</td><td>${esc(d.reason||"")}</td><td>${esc(d.approvedBy||"")}</td><td class="mono">${esc(d.exitTime)}</td><td class="mono">${d.exitType==="final"?"—":d.returnTime?esc(d.returnTime):'<span class="chip warn">خارج</span>'}</td><td>${esc(d.outBy||"")}${d.returnBy&&d.returnBy!==d.outBy?` / ${esc(d.returnBy)}`:""}</td>${own?gDelBtn("exits",id):""}</tr>`).join("")}
+    ${rows.map(([id,d],i)=>G.tab==="v"?`<tr><td class="c">${i+1}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td class="mono">${esc(d.idNo)}</td><td>${esc(d.company||"")}</td><td>${esc(catL(d.category))}</td><td>${esc(d.plate||"")}</td><td>${esc(d.purpose||"")}</td><td>${esc(d.host||"")}</td><td class="mono">${esc(d.timeIn)}</td><td class="mono">${d.timeOut?esc(d.timeOut):'<span class="chip warn">داخل</span>'}</td><td>${esc(d.inBy||"")}${d.outBy&&d.outBy!==d.inBy?` / ${esc(d.outBy)}`:""}</td>${own?gDelBtn("visits",id,d):""}</tr>`
+      :`<tr><td class="c">${i+1}</td><td class="mono">${esc(d.empNo||"")}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td>${esc(d.dept||"")}</td><td>${esc(etL(d.exitType))}</td><td>${esc(d.reason||"")}</td><td>${esc(d.approvedBy||"")}</td><td class="mono">${esc(d.exitTime)}</td><td class="mono">${d.exitType==="final"?"—":d.returnTime?esc(d.returnTime):'<span class="chip warn">خارج</span>'}</td><td>${esc(d.outBy||"")}${d.returnBy&&d.returnBy!==d.outBy?` / ${esc(d.returnBy)}`:""}</td>${own?gDelBtn("exits",id,d):""}</tr>`).join("")}
     </tbody></table></div>`:`<div class="empty"><b>لا توجد سجلات لهذا اليوم</b></div>`}
-    ${S.isOwner?"":`<div class="lockline" style="margin-top:8px">🔒 بعد الحفظ لا يمكن تعديل السجل — المسموح تسجيل الخروج/العودة فقط. للتصحيح راجع مسؤول السلامة.</div>`}`;
+    ${S.isOwner?"":`<div class="lockline" style="margin-top:8px">✎ تقدر تعدّل سجلات اليوم وأمس من زر «تعديل» مع كتابة السبب — كل تعديل ينحفظ باسمك. الأقدم من كذا يعدّله مسؤول السلامة.</div>`}`;
 }
-const gDelBtn=(c,id)=>`<td style="white-space:nowrap"><button class="btn ghost" data-act="gateEdit" data-c="${c}" data-id="${esc(id)}">تعديل</button> <button class="btn ghost" data-act="gateDel" data-c="${c}" data-id="${esc(id)}">حذف</button></td>`;
+/* guards may correct records from today and yesterday (with a reason); deleting, printing and export stay with the supervisor */
+const canFix=d=>!!d&&canEditData()&&(S.isOwner||d.date===ymd(new Date())||d.date===addDays(ymd(new Date()),-1));
+const gDelBtn=(c,id,d)=>`<td style="white-space:nowrap">${canFix(d)?`<button class="btn ghost" data-act="gateEdit" data-c="${c}" data-id="${esc(id)}">تعديل</button>`:""}${S.isOwner?` <button class="btn ghost" data-act="gateDel" data-c="${c}" data-id="${esc(id)}">حذف</button>`:""}</td>`;
 /* supervisor edit of a gate record — every change keeps a reason in the record's change log */
 let GE=null;
 function showGateEdit(c,id){
-  const d=(c==="visits"?G.v:G.e).get(id);if(!d||!S.isOwner)return;GE={c,id,d:clone(d)};
+  const d=(c==="visits"?G.v:G.e).get(id);if(!canFix(d))return;GE={c,id,d:clone(d)};
   const F=(k,l,o={})=>`<div class="field ${o.wide?"wide":""}"><label>${l}</label><input type="${o.time?"time":"text"}" id="ge-${k}" value="${esc(d[k]||"")}" ${o.num?'inputmode="numeric"':""}></div>`;
   const SEL=(k,l,list)=>`<div class="field"><label>${l}</label><select id="ge-${k}">${list.map(([x,t])=>`<option value="${x}" ${d[k]===x?"selected":""}>${t}</option>`).join("")}</select></div>`;
   const body=c==="visits"
@@ -1333,7 +1335,7 @@ function showGateOfficial(){
   const f=FORMS[G.tab==="v"?"visits":"exits"];
   $("#modal").innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="${f.title}">
     <div class="mhead"><div><b>${f.title}</b> <span class="formcode">${f.code}</span><div class="muted" style="font-size:.82rem">${esc(dG(G.day))}</div></div>
-    <div class="row">${S.dl?`<button class="btn" data-act="gDl">${ICONS.download}تنزيل نسخة</button>`:""}<button class="btn" data-act="closeModal" aria-label="إغلاق">إغلاق ✕</button></div></div>
+    <div class="row">${S.dl&&S.isOwner?`<button class="btn" data-act="gDl">${ICONS.download}تنزيل نسخة</button>`:""}<button class="btn" data-act="closeModal" aria-label="إغلاق">إغلاق ✕</button></div></div>
     <div class="mbody">${officialGate(G.tab,G.day)}</div></div>`;
   $("#modal").hidden=false;document.body.style.overflow="hidden";
 }
@@ -1375,8 +1377,8 @@ document.addEventListener("click",e=>{
   else if(a==="vOut")gateMark("visits",el.dataset.id,el);
   else if(a==="eBack")gateMark("exits",el.dataset.id,el);
   else if(a==="gOfficial")showGateOfficial();
-  else if(a==="gDl")gateDownload();
-  else if(a==="gExport")gateExport();
+  else if(a==="gDl"){if(S.isOwner)gateDownload()}
+  else if(a==="gExport"){if(S.isOwner)gateExport()}
   else if(a==="gateEdit")showGateEdit(el.dataset.c,el.dataset.id);
   else if(a==="geSave")saveGateEdit(el);
   else if(a==="geCancel"){GE=null;closeModal()}
@@ -1441,7 +1443,7 @@ function renderRecords(){
   if(!fo.some(o=>o[0]===RF.flag))RF.flag="all";
   $("#view").innerHTML=`<div class="stack">
     <div class="pagetitle"><div><h2>أرشيف السجلات</h2><div class="en">All submitted logs · search, open, export</div></div>
-      <div class="row">${S.dl?`<button class="btn" data-act="exportX">${ICONS.download}تصدير Excel</button>`:""}</div></div>
+      <div class="row">${S.dl&&S.isOwner?`<button class="btn" data-act="exportX">${ICONS.download}تصدير Excel</button>`:""}</div></div>
     <div class="gtabs"><button data-act="recTab" data-t="handover" aria-pressed="${RF.type==="handover"}"><b>تسليم الوردية</b><span class="formcode">37-1</span><span id="rt-h"></span></button>
       <button data-act="recTab" data-t="patrol" aria-pressed="${RF.type==="patrol"}"><b>الجولات الأمنية</b><span class="formcode">37-5</span><span id="rt-p"></span></button></div>
     <div class="sel">
@@ -1533,7 +1535,7 @@ function showDetail(confirmDel){
   $("#modal").innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="${f.title}">
     <div class="mhead"><div><b>${f.title}</b> <span class="formcode">${f.code}</span><div class="muted" style="font-size:.82rem">${esc(dG(d.date))} · ${esc(d.shiftName||"")}</div></div>
     <div class="row">${confirmDel?`<span style="color:var(--bad);font-weight:600">حذف هذا السجل نهائياً؟</span><button class="btn danger" data-act="delYes">نعم، احذف</button><button class="btn" data-act="delNo">تراجع</button>`:
-      `${S.dl?`<button class="btn" data-act="dlOne">${ICONS.download}تنزيل نسخة</button>`:""}${S.isOwner&&canEditData()?`<button class="btn" data-act="edOpen">تعديل</button><button class="btn danger" data-act="delAsk">حذف</button>`:""}<button class="btn" data-act="closeModal" aria-label="إغلاق">إغلاق ✕</button>`}</div></div>
+      `${S.dl&&S.isOwner?`<button class="btn" data-act="dlOne">${ICONS.download}تنزيل نسخة</button>`:""}${canFix(d)?`<button class="btn" data-act="edOpen">تعديل</button>`:""}${S.isOwner&&canEditData()?`<button class="btn danger" data-act="delAsk">حذف</button>`:""}<button class="btn" data-act="closeModal" aria-label="إغلاق">إغلاق ✕</button>`}</div></div>
     <div class="mbody">${type==="handover"?officialHandover(d,names):officialPatrol(d,names)}</div></div>`;
   $("#modal").hidden=false;document.body.style.overflow="hidden";
 }
@@ -1550,7 +1552,7 @@ function showEdit(){
   } else {
     const rs=(d.rounds||[]).slice().sort((a,b)=>a.no-b.no);
     h+=`<div class="card"><div class="row"><div class="field"><label>حارس البوابة</label><input type="text" id="ed-gate" value="${esc(d.gateGuard||"")}"></div><div class="field"><label>حارس الجولة</label><input type="text" id="ed-patrol" value="${esc(d.patrolGuard||"")}"></div></div></div>`;
-    h+=rs.map(r=>`<div class="edround"><div class="row" style="justify-content:space-between;align-items:center"><span class="roundno">جولة ${r.no}</span><label class="lockline"><input type="checkbox" id="ed-del-${esc(r.id)}"> حذف هذه الجولة</label></div>
+    h+=rs.map(r=>`<div class="edround"><div class="row" style="justify-content:space-between;align-items:center"><span class="roundno">جولة ${r.no}</span>${S.isOwner||!r.end?`<label class="lockline"><input type="checkbox" id="ed-del-${esc(r.id)}"> حذف هذه الجولة</label>`:""}</div>
       <div class="row"><div class="field" style="flex:0 1 140px"><label>البدء</label><input type="time" id="ed-s-${esc(r.id)}" value="${esc(r.start)}"></div><div class="field" style="flex:0 1 140px"><label>الانتهاء</label><input type="time" id="ed-e-${esc(r.id)}" value="${esc(r.end||"")}"></div><div class="field" style="flex:0 1 160px"><label>توقيع مختصر</label><input type="text" id="ed-i-${esc(r.id)}" value="${esc(r.initials||"")}"></div></div>
       <div class="edareas">${AREAS.map(a=>`<div class="field"><label>${esc(a.ar)}</label><select id="ed-a-${esc(r.id)}-${a.k}">${opts(r.areas?.[a.k]||"",[["ok","✓ تم التحقق"],["issue","✗ توجد ملاحظة"],["na","N/A لا ينطبق"],["","— غير محدد"]])}</select></div>`).join("")}</div>
       <div class="row"><div class="field"><label>الملاحظة / الحالة</label><input type="text" id="ed-o-${esc(r.id)}" value="${esc(r.observation||"")}"></div><div class="field"><label>الإجراء / التصعيد</label><input type="text" id="ed-x-${esc(r.id)}" value="${esc(r.action||"")}"></div></div></div>`).join("")||`<div class="empty">لا توجد جولات</div>`;
@@ -1709,11 +1711,11 @@ document.addEventListener("click",e=>{
   else if(a==="detail")openDetail(el.dataset.type,el.dataset.id);
   else if(a==="recTab"){RF.type=el.dataset.t;lsSet("rec-tab",RF.type);renderRecords()}
   else if(a==="closeModal")closeModal();
-  else if(a==="dlOne")downloadOne();
+  else if(a==="dlOne"){if(S.isOwner)downloadOne()}
   else if(a==="delAsk")showDetail(true);
   else if(a==="delNo")showDetail(false);
   else if(a==="delYes")deleteRecord();
-  else if(a==="exportX")exportXlsx();
+  else if(a==="exportX"){if(S.isOwner)exportXlsx()}
   else if(a==="fuOpen"){const box=$(`#fu-${CSS.escape(el.dataset.id)}-${el.dataset.k}`);if(box){box.hidden=false;el.hidden=true;box.querySelector("input")?.focus()}}
   else if(a==="fuClose"){const id=el.dataset.id,k=el.dataset.k;const note=($(`#funote-${CSS.escape(id)}-${k}`)?.value||"").trim();if(!note){toast("اكتب الإجراء المتخذ لإغلاق المتابعة","bad");return}
     const ref=S.db.doc("handovers/"+id);enqueue(ref.path,()=>ref.update({followups:{[k]:{closed:true,closedAt:isoNow(),closedBy:S.uid,note}},updatedAt:isoNow(),updatedBy:S.uid})).then(()=>toast("أُغلقت المتابعة ✓")).catch(()=>{})}
@@ -1730,7 +1732,7 @@ document.addEventListener("click",e=>{
   else if(a==="syncNow"){STORE.sync();if(S.db&&S.db.refresh)S.db.refresh();if(!NET.online)toast("جارٍ محاولة الاتصال…")}
   else if(a==="setSave")saveSettings();
   else if(a==="hPick"){HSel.date=el.dataset.d;HSel.shiftId=el.dataset.s;subscribeHandover();renderHandover()}
-  else if(a==="edOpen"){if(S.isOwner)showEdit()}
+  else if(a==="edOpen"){if(DET&&canFix(DET.d))showEdit()}
   else if(a==="edCancel")showDetail();
   else if(a==="edSave")saveEdit();
   else if(a==="exDel"){if(!el.dataset.armed){el.dataset.armed="1";el.textContent="اضغط مرة أخرى للتأكيد";setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent="حذف كل الأمثلة"}},4000);return}el.disabled=true;el.textContent="جارٍ الحذف…";deleteExamples()}
