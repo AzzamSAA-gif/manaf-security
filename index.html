@@ -344,12 +344,12 @@ footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;c
   </header>
   <div class="wrap" id="banner"></div>
   <main class="wrap" id="view"></main>
-  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.2</b> · يعمل بدون إنترنت</div></div></footer>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.3</b> · يعمل بدون إنترنت</div></div></footer>
 </div>
 <div id="modal" hidden dir="rtl"></div>
 <div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
 <form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
-<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.2</b> · يعمل بدون إنترنت</div></div></div>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.3</b> · يعمل بدون إنترنت</div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -1385,7 +1385,7 @@ document.addEventListener("click",e=>{
 });
 
 /* ---------- RECORDS ---------- */
-const RF={from:null,to:null,type:"all",shift:"all",flag:"all"};let RD={h:new Map(),p:new Map(),loaded:false};let rUnsubs=[];let rKey=null;
+const RF={from:null,to:null,type:lsGet("rec-tab")==="patrol"?"patrol":"handover",shift:"all",flag:"all"};let RD={h:new Map(),p:new Map(),loaded:false};let rUnsubs=[];let rKey=null;
 function stopRecordsSub(){rUnsubs.forEach(u=>u());rUnsubs=[];rKey=null}
 function enterRecords(){
   if(!RF.from){RF.to=ymd(new Date());RF.from=addDays(RF.to,-30)}
@@ -1400,16 +1400,17 @@ function subscribeRecords(){
     m.clear();snap.docs.forEach(d=>m.set(d.id,d.data()));if(++got>=2)RD.loaded=true;if(S.view==="records")renderRecList()},e=>console.warn(e));
   rUnsubs=[sub("handovers",RD.h),sub("patrols",RD.p)];
 }
-function recItems(){
-  const out=[];
-  if(RF.type!=="patrol")for(const [id,d] of RD.h)out.push({type:"handover",id,d});
-  if(RF.type!=="handover")for(const [id,d] of RD.p)out.push({type:"patrol",id,d});
+function recItems(all,type){
+  const out=[];const t=type||RF.type;
+  if(all||t==="handover")for(const [id,d] of RD.h)out.push({type:"handover",id,d});
+  if(all||t==="patrol")for(const [id,d] of RD.p)out.push({type:"patrol",id,d});
   return out.filter(x=>RF.shift==="all"||x.d.shiftId===RF.shift).filter(x=>{
     if(RF.flag==="all")return true;
     const f=recFlags(x);
     if(RF.flag==="issues")return f.issues>0;
     if(RF.flag==="open")return f.openFu>0;
     if(RF.flag==="awaiting")return x.type==="handover"&&x.d.status!=="accepted";
+    if(RF.flag==="missing")return false;
     return true;
   }).sort((a,b)=>(b.d.date+(b.d.shiftId||"")).localeCompare(a.d.date+(a.d.shiftId||""))||a.type.localeCompare(b.type));
 }
@@ -1417,29 +1418,59 @@ function recFlags(x){
   if(x.type==="handover"){const items=x.d.items||{};const rem=ITEMS.filter(i=>items[i.k]?.status==="remark").length;const openFu=ITEMS.filter(i=>items[i.k]?.follow==="yes"&&!x.d.followups?.[i.k]?.closed).length;return{issues:rem,openFu}}
   const rs=x.d.rounds||[];return{issues:rs.filter(r=>AREAS.some(a=>r.areas?.[a.k]==="issue")).length,openFu:0,rounds:rs.filter(r=>r.end).length};
 }
+/* shifts in the period that have no handover / no completed patrol (current shift excluded) */
+function missingShifts(type){
+  const recs=[...RD.h.values(),...RD.p.values()].filter(d=>d.date&&d.shiftId).map(d=>shiftStartDate(d.date,shiftById(d.shiftId)||shiftsL()[0]).getTime());
+  const low=startDT()?startDT().getTime():(recs.length?Math.min(...recs):Infinity);
+  const now=new Date(),cur=currentShift(now),curId=docId(cur.date,cur.shift.id),out=[];
+  for(let d=RF.to;d>=RF.from;d=addDays(d,-1)){
+    for(const s of shiftsL()){
+      if(RF.shift!=="all"&&s.id!==RF.shift)continue;
+      const id=docId(d,s.id),t=shiftStartDate(d,s);if(id===curId||t>now||t.getTime()<low)continue;
+      if(type==="handover"){if(!RD.h.has(id))out.push({date:d,shift:s,t:t.getTime()})}
+      else{const p=RD.p.get(id);if(!p||!(p.rounds||[]).some(r=>r.end))out.push({date:d,shift:s,t:t.getTime()})}
+    }
+    if(out.length>200||d<"2020")break;
+  }
+  return out.sort((a,b)=>b.t-a.t);
+}
 function renderRecords(){
+  const fo=RF.type==="handover"
+    ?[["all","كل السجلات"],["awaiting","بانتظار الاستلام"],["open","متابعات مفتوحة"],["issues","بها ملاحظات"],["missing","ورديات بدون تسليم"]]
+    :[["all","كل السجلات"],["issues","بها ملاحظات ✗"],["missing","ورديات بدون جولات"]];
+  if(!fo.some(o=>o[0]===RF.flag))RF.flag="all";
   $("#view").innerHTML=`<div class="stack">
     <div class="pagetitle"><div><h2>أرشيف السجلات</h2><div class="en">All submitted logs · search, open, export</div></div>
       <div class="row">${S.dl?`<button class="btn" data-act="exportX">${ICONS.download}تصدير Excel</button>`:""}</div></div>
+    <div class="gtabs"><button data-act="recTab" data-t="handover" aria-pressed="${RF.type==="handover"}"><b>تسليم الوردية</b><span class="formcode">37-1</span><span id="rt-h"></span></button>
+      <button data-act="recTab" data-t="patrol" aria-pressed="${RF.type==="patrol"}"><b>الجولات الأمنية</b><span class="formcode">37-5</span><span id="rt-p"></span></button></div>
     <div class="sel">
       <div class="field"><label>من <span class="en">From</span></label><input type="date" id="rf-from" value="${esc(RF.from)}"></div>
       <div class="field"><label>إلى <span class="en">To</span></label><input type="date" id="rf-to" value="${esc(RF.to)}"></div>
-      <div class="field"><label>النموذج <span class="en">Form</span></label><select id="rf-type"><option value="all">الكل</option><option value="handover">تسليم الوردية 37-1</option><option value="patrol">الجولات الأمنية 37-5</option></select></div>
       <div class="field"><label>الوردية <span class="en">Shift</span></label><select id="rf-shift"><option value="all">الكل</option>${shiftsL().map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("")}</select></div>
-      <div class="field"><label>تصفية <span class="en">Filter</span></label><select id="rf-flag"><option value="all">كل السجلات</option><option value="issues">بها ملاحظات</option><option value="open">متابعات مفتوحة</option><option value="awaiting">بانتظار الاستلام</option></select></div>
+      <div class="field"><label>تصفية <span class="en">Filter</span></label><select id="rf-flag">${fo.map(([x,l])=>`<option value="${x}">${l}</option>`).join("")}</select></div>
     </div>
     <div id="rec-sum" class="muted" style="font-size:.88rem"></div>
     <div class="reclist" id="reclist"></div></div>`;
-  $("#rf-type").value=RF.type;$("#rf-shift").value=RF.shift;$("#rf-flag").value=RF.flag;
+  $("#rf-shift").value=RF.shift;$("#rf-flag").value=RF.flag;
   renderRecList();
 }
 function renderRecList(){
   const el=$("#reclist");if(!el)return;
   if(!RD.loaded&&S.db){el.innerHTML=`<div class="card empty"><b>جارٍ تحميل السجلات…</b></div>`;return}
+  const sv=RF.flag;RF.flag="all";const allH=recItems(false,"handover"),allP=recItems(false,"patrol");RF.flag=sv;
+  const mH=missingShifts("handover"),mP=missingShifts("patrol");
+  const aw=allH.filter(x=>x.d.status!=="accepted").length,fu=allH.reduce((s,x)=>s+recFlags(x).openFu,0);
+  const nr=allP.reduce((s,x)=>s+(x.d.rounds||[]).filter(r=>r.end).length,0),pi=allP.reduce((s,x)=>s+recFlags(x).issues,0);
+  const chip=(n,cls,l)=>n?`<span class="chip ${cls}">${n} ${l}</span>`:"";
+  const th=$("#rt-h");if(th)th.innerHTML=`<span class="chip na">${allH.length} سجل</span>${chip(aw,"warn","بانتظار الاستلام")}${chip(fu,"bad","متابعة مفتوحة")}${chip(mH.length,"bad","بدون تسليم")}`;
+  const tp=$("#rt-p");if(tp)tp.innerHTML=`<span class="chip na">${nr} جولة</span>${chip(pi,"bad","بها ✗")}${chip(mP.length,"bad","بدون جولات")}`;
+  if(RF.flag==="missing"){const m=RF.type==="handover"?mH:mP;
+    $("#rec-sum").textContent=`${m.length} وردية ${RF.type==="handover"?"بدون تسليم":"بدون جولة مكتملة"} · من ${RF.from} إلى ${RF.to}`;
+    el.innerHTML=m.length?m.map(x=>`<div class="rec" style="cursor:default"><span class="ic" style="color:var(--bad)">${ICONS[RF.type]}</span><span style="min-width:0"><span class="t">${esc(x.shift.name)}</span><span class="m"><span>${esc(dGs(x.date))}</span><span class="mono">${esc(x.shift.start)} – ${esc(x.shift.end)}</span></span></span><span class="flags"><span class="chip bad">${RF.type==="handover"?"لم يُسجَّل تسليم":"لم تُسجَّل جولات"}</span></span></div>`).join(""):`<div class="card empty"><b>ممتاز — كل الورديات في هذه الفترة مسجّلة ✓</b></div>`;
+    return}
   const items=recItems();
-  const nh=items.filter(x=>x.type==="handover").length,np=items.filter(x=>x.type==="patrol").length;
-  const nr=items.filter(x=>x.type==="patrol").reduce((s,x)=>s+(x.d.rounds||[]).filter(r=>r.end).length,0);
-  $("#rec-sum").textContent=`${items.length} سجل · ${nh} تسليم وردية · ${np} سجل جولات (${nr} جولة مكتملة) · من ${RF.from} إلى ${RF.to}`;
+  $("#rec-sum").textContent=RF.type==="handover"?`${items.length} تسليم وردية · من ${RF.from} إلى ${RF.to}`:`${items.length} سجل جولات · ${items.reduce((s,x)=>s+(x.d.rounds||[]).filter(r=>r.end).length,0)} جولة مكتملة · من ${RF.from} إلى ${RF.to}`;
   if(!items.length){el.innerHTML=`<div class="card empty"><b>لا توجد سجلات في هذه الفترة</b>كل نموذج يعبّيه الفريق من شاشتي "الجولات الأمنية" و"تسليم الوردية" يُحفظ هنا تلقائياً.</div>`;return}
   el.innerHTML=items.map(x=>{const f=recFlags(x);const d=x.d;
     const title=x.type==="handover"?"تسليم واستلام الوردية":"سجل الدوريات الأمنية";
@@ -1568,7 +1599,7 @@ async function deleteRecord(){
 function loadXLSX(){return new Promise((res,rej)=>{if(window.XLSX)return res(window.XLSX);const s=document.createElement("script");s.src="https:\/\/cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=()=>res(window.XLSX);s.onerror=()=>rej(new Error("load"));document.head.appendChild(s)})}
 async function exportXlsx(){
   let X;try{X=await loadXLSX()}catch(e){toast("تعذّر تحميل أداة Excel","bad");return}
-  const items=recItems();
+  const items=recItems(true);
   const hRows=items.filter(x=>x.type==="handover").map(x=>{const d=x.d;const r={"التاريخ":d.date,"الوردية المسلِّمة":d.shiftName,"الوردية المستلمة":d.nextShiftName,"الحالة":d.status==="accepted"?"مُستلَمة":"بانتظار الاستلام",
     "المسلِّم 1":d.outgoing?.[0]?.name||"","وقت المسلِّم 1":d.outgoing?.[0]?.time||"","المسلِّم 2":d.outgoing?.[1]?.name||"","المستلم 1":d.incoming?.[0]?.name||"","وقت المستلم 1":d.incoming?.[0]?.time||"","المستلم 2":d.incoming?.[1]?.name||""};
     for(const it of ITEMS){const v=d.items?.[it.k]||{};r[it.ar+" - الحالة"]=ST_LBL[v.status]||"";r[it.ar+" - متابعة"]=v.follow==="yes"?(d.followups?.[it.k]?.closed?"نعم (مغلقة)":"نعم"):v.follow==="no"?"لا":"";r[it.ar+" - ملاحظة"]=v.note||""}
@@ -1651,7 +1682,7 @@ document.addEventListener("change",e=>{
   if(id==="h-date"||id==="h-shift"){HSel.date=$("#h-date").value||HSel.date;HSel.shiftId=$("#h-shift").value;subscribeHandover();renderHandover()}
   else if(id==="p-date"||id==="p-shift"){PSel.date=$("#p-date").value||PSel.date;PSel.shiftId=$("#p-shift").value;if(prTimer){clearTimeout(prTimer);prTimer=null;savePatrolRounds()}subscribePatrol();renderPatrol()}
   else if(id==="rf-from"||id==="rf-to"){const f=$("#rf-from").value,t=$("#rf-to").value;if(f&&t&&f<=t){RF.from=f;RF.to=t;subscribeRecords();renderRecList()}}
-  else if(id==="rf-type"||id==="rf-shift"||id==="rf-flag"){RF.type=$("#rf-type").value;RF.shift=$("#rf-shift").value;RF.flag=$("#rf-flag").value;renderRecList()}
+  else if(id==="rf-shift"||id==="rf-flag"){RF.shift=$("#rf-shift").value;RF.flag=$("#rf-flag").value;renderRecList()}
 });
 document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches('td.cell[data-act]')){e.preventDefault();e.target.click()}});
 document.addEventListener("click",e=>{
@@ -1676,6 +1707,7 @@ document.addEventListener("click",e=>{
   else if(a==="rDel"){const id=el.dataset.id;if(el.dataset.armed){const rounds=(PD.doc?.rounds||[]).filter(r=>r.id!==id);writePatrol({rounds}).then(()=>toast("حُذفت الجولة")).catch(()=>{})}else{el.dataset.armed="1";el.textContent="تأكيد الحذف";el.classList.add("danger");setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent="حذف";el.classList.remove("danger")}},4000)}}
   else if(a==="openShift"){HSel.date=el.dataset.d;HSel.shiftId=el.dataset.s;go("handover")}
   else if(a==="detail")openDetail(el.dataset.type,el.dataset.id);
+  else if(a==="recTab"){RF.type=el.dataset.t;lsSet("rec-tab",RF.type);renderRecords()}
   else if(a==="closeModal")closeModal();
   else if(a==="dlOne")downloadOne();
   else if(a==="delAsk")showDetail(true);
