@@ -185,6 +185,7 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface-2);col
 .gtabs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .gtabs button{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;justify-content:flex-start;text-align:start;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;cursor:pointer;font:inherit;color:var(--ink)}
 .gtabs button b{flex:1 1 100%;font-size:.95rem}
+.chiplink{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .gtabs button[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand) inset;background:var(--surface-2)}
 .gform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .gform .field.wide{grid-column:1/-1}
@@ -344,12 +345,12 @@ footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;c
   </header>
   <div class="wrap" id="banner"></div>
   <main class="wrap" id="view"></main>
-  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.5</b> · يعمل بدون إنترنت</div></div></footer>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.6</b> · يعمل بدون إنترنت</div></div></footer>
 </div>
 <div id="modal" hidden dir="rtl"></div>
 <div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
 <form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
-<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.5</b> · يعمل بدون إنترنت</div></div></div>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.6</b> · يعمل بدون إنترنت</div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -1466,9 +1467,9 @@ function renderRecList(){
   const mH=missingShifts("handover"),mP=missingShifts("patrol");
   const aw=allH.filter(x=>x.d.status!=="accepted").length,fu=allH.reduce((s,x)=>s+recFlags(x).openFu,0);
   const nr=allP.reduce((s,x)=>s+(x.d.rounds||[]).filter(r=>r.end).length,0),pi=allP.reduce((s,x)=>s+recFlags(x).issues,0);
-  const chip=(n,cls,l)=>n?`<span class="chip ${cls}">${n} ${l}</span>`:"";
-  const th=$("#rt-h");if(th)th.innerHTML=`<span class="chip na">${allH.length} سجل</span>${chip(aw,"warn","بانتظار الاستلام")}${chip(fu,"bad","متابعة مفتوحة")}${chip(mH.length,"bad","بدون تسليم")}`;
-  const tp=$("#rt-p");if(tp)tp.innerHTML=`<span class="chip na">${nr} جولة</span>${chip(pi,"bad","بها ✗")}${chip(mP.length,"bad","بدون جولات")}`;
+  const chip=(n,cls,l,t,f)=>n?`<span class="chip ${cls} chiplink" data-act="recFlag" data-t="${t}" data-f="${f}" role="button" title="اضغط لعرضها">${n} ${l} ‹</span>`:"";
+  const th=$("#rt-h");if(th)th.innerHTML=`<span class="chip na">${allH.length} سجل</span>${chip(aw,"warn","بانتظار الاستلام","handover","awaiting")}${chip(fu,"bad","متابعة مفتوحة","handover","open")}${chip(mH.length,"bad","بدون تسليم","handover","missing")}`;
+  const tp=$("#rt-p");if(tp)tp.innerHTML=`<span class="chip na">${nr} جولة</span>${chip(pi,"bad","بها ✗","patrol","issues")}${chip(mP.length,"bad","بدون جولات","patrol","missing")}`;
   if(RF.flag==="missing"){const m=RF.type==="handover"?mH:mP;
     $("#rec-sum").textContent=`${m.length} وردية ${RF.type==="handover"?"بدون تسليم":"بدون جولة مكتملة"} · من ${RF.from} إلى ${RF.to}`;
     el.innerHTML=m.length?m.map(x=>`<div class="rec" style="cursor:default"><span class="ic" style="color:var(--bad)">${ICONS[RF.type]}</span><span style="min-width:0"><span class="t">${esc(x.shift.name)}</span><span class="m"><span>${esc(dGs(x.date))}</span><span class="mono">${esc(x.shift.start)} – ${esc(x.shift.end)}</span></span></span><span class="flags"><span class="chip bad">${RF.type==="handover"?"لم يُسجَّل تسليم":"لم تُسجَّل جولات"}</span></span></div>`).join(""):`<div class="card empty"><b>ممتاز — كل الورديات في هذه الفترة مسجّلة ✓</b></div>`;
@@ -1712,6 +1713,7 @@ document.addEventListener("click",e=>{
   else if(a==="openShift"){HSel.date=el.dataset.d;HSel.shiftId=el.dataset.s;go("handover")}
   else if(a==="detail")openDetail(el.dataset.type,el.dataset.id);
   else if(a==="recTab"){RF.type=el.dataset.t;lsSet("rec-tab",RF.type);renderRecords()}
+  else if(a==="recFlag"){RF.type=el.dataset.t;lsSet("rec-tab",RF.type);RF.flag=el.dataset.f;renderRecords();setTimeout(()=>$("#reclist")?.scrollIntoView({behavior:"smooth",block:"start"}),50)}
   else if(a==="closeModal")closeModal();
   else if(a==="dlOne"){if(S.isOwner)downloadOne()}
   else if(a==="delAsk")showDetail(true);
