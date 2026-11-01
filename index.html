@@ -345,12 +345,12 @@ footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;c
   </header>
   <div class="wrap" id="banner"></div>
   <main class="wrap" id="view"></main>
-  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.6</b> · يعمل بدون إنترنت</div></div></footer>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.7</b> · يعمل بدون إنترنت</div></div></footer>
 </div>
 <div id="modal" hidden dir="rtl"></div>
 <div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
 <form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
-<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.6</b> · يعمل بدون إنترنت</div></div></div>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.7</b> · يعمل بدون إنترنت</div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -1472,7 +1472,7 @@ function renderRecList(){
   const tp=$("#rt-p");if(tp)tp.innerHTML=`<span class="chip na">${nr} جولة</span>${chip(pi,"bad","بها ✗","patrol","issues")}${chip(mP.length,"bad","بدون جولات","patrol","missing")}`;
   if(RF.flag==="missing"){const m=RF.type==="handover"?mH:mP;
     $("#rec-sum").textContent=`${m.length} وردية ${RF.type==="handover"?"بدون تسليم":"بدون جولة مكتملة"} · من ${RF.from} إلى ${RF.to}`;
-    el.innerHTML=m.length?m.map(x=>`<div class="rec" style="cursor:default"><span class="ic" style="color:var(--bad)">${ICONS[RF.type]}</span><span style="min-width:0"><span class="t">${esc(x.shift.name)}</span><span class="m"><span>${esc(dGs(x.date))}</span><span class="mono">${esc(x.shift.start)} – ${esc(x.shift.end)}</span></span></span><span class="flags"><span class="chip bad">${RF.type==="handover"?"لم يُسجَّل تسليم":"لم تُسجَّل جولات"}</span></span></div>`).join(""):`<div class="card empty"><b>ممتاز — كل الورديات في هذه الفترة مسجّلة ✓</b></div>`;
+    el.innerHTML=m.length?m.map(x=>`<div class="rec" style="cursor:default"><span class="ic" style="color:var(--bad)">${ICONS[RF.type]}</span><span style="min-width:0"><span class="t">${esc(x.shift.name)}</span><span class="m"><span>${esc(dGs(x.date))}</span><span class="mono">${esc(x.shift.start)} – ${esc(x.shift.end)}</span></span></span><span class="flags"><span class="chip bad">${RF.type==="handover"?"لم يُسجَّل تسليم":"لم تُسجَّل جولات"}</span>${S.isOwner&&canEditData()?`<button class="btn" data-act="fillMissing" data-t="${RF.type}" data-d="${esc(x.date)}" data-s="${esc(x.shift.id)}">سجّل الآن</button>`:""}</span></div>`).join(""):`<div class="card empty"><b>ممتاز — كل الورديات في هذه الفترة مسجّلة ✓</b></div>`;
     return}
   const items=recItems();
   $("#rec-sum").textContent=RF.type==="handover"?`${items.length} تسليم وردية · من ${RF.from} إلى ${RF.to}`:`${items.length} سجل جولات · ${items.reduce((s,x)=>s+(x.d.rounds||[]).filter(r=>r.end).length,0)} جولة مكتملة · من ${RF.from} إلى ${RF.to}`;
@@ -1713,6 +1713,7 @@ document.addEventListener("click",e=>{
   else if(a==="openShift"){HSel.date=el.dataset.d;HSel.shiftId=el.dataset.s;go("handover")}
   else if(a==="detail")openDetail(el.dataset.type,el.dataset.id);
   else if(a==="recTab"){RF.type=el.dataset.t;lsSet("rec-tab",RF.type);renderRecords()}
+  else if(a==="fillMissing"){if(!S.isOwner)return;const d=el.dataset.d,s=el.dataset.s;if(el.dataset.t==="handover"){HSel.date=d;HSel.shiftId=s;go("handover")}else{PSel.date=d;PSel.shiftId=s;go("patrol")}}
   else if(a==="recFlag"){RF.type=el.dataset.t;lsSet("rec-tab",RF.type);RF.flag=el.dataset.f;renderRecords();setTimeout(()=>$("#reclist")?.scrollIntoView({behavior:"smooth",block:"start"}),50)}
   else if(a==="closeModal")closeModal();
   else if(a==="dlOne"){if(S.isOwner)downloadOne()}
