@@ -344,12 +344,12 @@ footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;c
   </header>
   <div class="wrap" id="banner"></div>
   <main class="wrap" id="view"></main>
-  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.4</b> · يعمل بدون إنترنت</div></div></footer>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.5</b> · يعمل بدون إنترنت</div></div></footer>
 </div>
 <div id="modal" hidden dir="rtl"></div>
 <div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
 <form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
-<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.4</b> · يعمل بدون إنترنت</div></div></div>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.5</b> · يعمل بدون إنترنت</div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -1065,9 +1065,10 @@ async function endRound(){
 
 /* ---------- GATE: visitors (37-3) + employee exits (37-6) ---------- */
 const V_CAT=[["visitor","زائر"],["contractor","مقاول"],["supplier","مورد"],["driver","سائق"],["other","أخرى"]];
-const E_TYPE=[["permission","استئذان"],["mission","مهمة عمل"],["final","خروج نهائي"],["other","أخرى"]];
+const E_TYPE=[["permission","استئذان"],["noperm","خروج بدون إذن"],["mission","مهمة عمل"],["final","خروج نهائي"],["other","أخرى"]];
 const catL=k=>(V_CAT.find(x=>x[0]===k)||[0,k||""])[1];
 const etL=k=>(E_TYPE.find(x=>x[0]===k)||[0,k||""])[1];
+const etChip=k=>k==="noperm"?`<span class="chip bad">⚠ خروج بدون إذن</span>`:esc(etL(k));
 const G={tab:lsGet("gate-tab")||"v",day:null,v:new Map(),e:new Map(),loaded:{v:false,e:false},roster:null,vf:null,ef:null,gate:lsGet("gate-name")||"البوابة الرئيسية",from:null};
 let gUnsubs=[];
 const gateOn=()=>S.isOwner||!!S.settings.gateForGuards;
@@ -1154,7 +1155,7 @@ function updateGate(){
         <button class="btn primary" data-act="vOut" data-id="${esc(id)}" ${gdis()}>تسجيل خروج</button></div>`).join(""):'<div class="empty"><b>لا يوجد زوار داخل الموقع</b>كل من يُسجَّل دخوله يظهر هنا حتى يُسجَّل خروجه.</div>'}</div></div>`;
   }else{
     $("#g-now").innerHTML=`<div class="card nowcard"><div class="cardhead"><div><h3>خارج الموقع الآن</h3><div class="en">Employees out on permission / work mission</div></div><span class="chip ${ne.length?"warn":"ok"}">${ne.length}</span></div>
-      <div class="list">${!loaded?'<div class="empty"><b>جارٍ التحميل…</b></div>':ne.length?ne.map(([id,d])=>`<div class="li"><div class="body"><div class="t">${esc(d.name)} <span class="chip na">${esc(etL(d.exitType))}</span></div>
+      <div class="list">${!loaded?'<div class="empty"><b>جارٍ التحميل…</b></div>':ne.length?ne.map(([id,d])=>`<div class="li"><div class="body"><div class="t">${esc(d.name)} <span class="chip na">${etChip(d.exitType)}</span></div>
         <div class="m">${[d.empNo?"#"+d.empNo:"",d.dept,d.approvedBy?"اعتمد: "+d.approvedBy:""].filter(Boolean).map(esc).join(" · ")}</div><div class="m">خرج <span class="mono">${esc(d.exitTime)}</span>${when(d)} · ${esc(d.reason||"")}</div></div>
         <button class="btn primary" data-act="eBack" data-id="${esc(id)}" ${gdis()}>تسجيل العودة</button></div>`).join(""):'<div class="empty"><b>لا يوجد موظفون خارج الموقع</b>الاستئذان ومهام العمل تظهر هنا حتى تُسجَّل العودة. الخروج النهائي لا يظهر هنا.</div>'}</div></div>`;
   }
@@ -1173,7 +1174,7 @@ function renderGateLog(){
       <button class="btn" data-act="gOfficial">${ICONS.records}النموذج الرسمي</button>${S.isOwner?`<button class="btn" data-act="gExport">${ICONS.download}تصدير Excel</button>`:""}</div>
     ${rows.length?`<div class="rounds"><table class="tbl"><thead><tr><th class="c">رقم</th>${head.map(h=>`<th>${h}</th>`).join("")}${own?"<th></th>":""}</tr></thead><tbody>
     ${rows.map(([id,d],i)=>G.tab==="v"?`<tr><td class="c">${i+1}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td class="mono">${esc(d.idNo)}</td><td>${esc(d.company||"")}</td><td>${esc(catL(d.category))}</td><td>${esc(d.plate||"")}</td><td>${esc(d.purpose||"")}</td><td>${esc(d.host||"")}</td><td class="mono">${esc(d.timeIn)}</td><td class="mono">${d.timeOut?esc(d.timeOut):'<span class="chip warn">داخل</span>'}</td><td>${esc(d.inBy||"")}${d.outBy&&d.outBy!==d.inBy?` / ${esc(d.outBy)}`:""}</td>${own?gDelBtn("visits",id,d):""}</tr>`
-      :`<tr><td class="c">${i+1}</td><td class="mono">${esc(d.empNo||"")}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td>${esc(d.dept||"")}</td><td>${esc(etL(d.exitType))}</td><td>${esc(d.reason||"")}</td><td>${esc(d.approvedBy||"")}</td><td class="mono">${esc(d.exitTime)}</td><td class="mono">${d.exitType==="final"?"—":d.returnTime?esc(d.returnTime):'<span class="chip warn">خارج</span>'}</td><td>${esc(d.outBy||"")}${d.returnBy&&d.returnBy!==d.outBy?` / ${esc(d.returnBy)}`:""}</td>${own?gDelBtn("exits",id,d):""}</tr>`).join("")}
+      :`<tr><td class="c">${i+1}</td><td class="mono">${esc(d.empNo||"")}</td><td><b>${esc(d.name)}</b>${d.edits&&d.edits.length?` <span class="chip warn" style="font-size:.7rem" title="${esc(d.edits.map(x=>x.reason).join(" / "))}">معدّل</span>`:""}${d.notes?`<div class="muted" style="font-size:.75rem">${esc(d.notes)}</div>`:""}</td><td>${esc(d.dept||"")}</td><td>${etChip(d.exitType)}</td><td>${esc(d.reason||"")}</td><td>${esc(d.approvedBy||"")}</td><td class="mono">${esc(d.exitTime)}</td><td class="mono">${d.exitType==="final"?"—":d.returnTime?esc(d.returnTime):'<span class="chip warn">خارج</span>'}</td><td>${esc(d.outBy||"")}${d.returnBy&&d.returnBy!==d.outBy?` / ${esc(d.returnBy)}`:""}</td>${own?gDelBtn("exits",id,d):""}</tr>`).join("")}
     </tbody></table></div>`:`<div class="empty"><b>لا توجد سجلات لهذا اليوم</b></div>`}
     ${S.isOwner?"":`<div class="lockline" style="margin-top:8px">✎ تقدر تعدّل سجلات اليوم وأمس من زر «تعديل» مع كتابة السبب — كل تعديل ينحفظ باسمك. الأقدم من كذا يعدّله مسؤول السلامة.</div>`}`;
 }
@@ -1296,12 +1297,13 @@ async function empOut(btn){
   if(!t("empNo")&&!t("name"))return toast("اكتب الرقم الوظيفي","bad");
   if(!t("name"))return toast("اكتب اسم الموظف","bad");
   if(!f.exitType)return toast("اختر نوع الخروج","bad");
-  if(!t("reason"))return toast("اكتب سبب الخروج","bad");
-  if(!t("approvedBy"))return toast("اكتب اسم المسؤول المعتمد","bad");
+  const np=f.exitType==="noperm";
+  if(!np&&!t("reason"))return toast("اكتب سبب الخروج","bad");
+  if(!np&&!t("approvedBy"))return toast("اكتب اسم المسؤول المعتمد","bad");
   const dup=t("empNo")&&outsideE().find(([id,d])=>d.empNo===t("empNo"));if(dup)return toast(`${dup[1].name} مسجّل خارج من ${dup[1].exitTime} — سجّل عودته أولاً`,"bad");
   const now=new Date(),c=currentShift(now);btn.disabled=true;
   try{await gateSave("exits",{type:"exit",date:ymd(now),shiftId:c.shift.id,shiftName:c.shift.name,gate:G.gate,empNo:t("empNo"),name:t("name"),dept:t("dept"),exitType:f.exitType,reason:t("reason"),approvedBy:t("approvedBy"),notes:t("notes"),exitTime:hhmm(now),returnTime:""});
-    toast(`تم تسجيل خروج ${t("name")} ✓`);G.ef=blankEF();renderGateForm();}catch(e){}finally{btn.disabled=false}
+    toast(np?`⚠ تم تسجيل خروج ${t("name")} بدون إذن`:`تم تسجيل خروج ${t("name")} ✓`,np?"bad":"");G.ef=blankEF();renderGateForm();}catch(e){}finally{btn.disabled=false}
 }
 function armed(el,label){if(el.dataset.armed)return true;const old=el.textContent;el.dataset.armed="1";el.textContent=label;el.classList.add("danger");setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent=old;el.classList.remove("danger")}},4000);return false}
 async function gateMark(col,id,el){
