@@ -213,6 +213,8 @@ input:disabled,select:disabled,textarea:disabled{background:var(--surface-2);col
 
 /* home */
 .hero{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+.hero.two{grid-template-columns:1.2fr 1fr}
+@media (max-width:900px){.hero.two{grid-template-columns:1fr}}
 @media (max-width:900px){.hero{grid-template-columns:1fr 1fr}.hero .now{grid-column:1/-1}}
 @media (max-width:520px){.hero{grid-template-columns:1fr}}
 .now{background:var(--deep);color:var(--on-deep);border-color:var(--deep)}
@@ -345,12 +347,12 @@ footer.ft{border-top:1px solid var(--line);padding-block:14px;font-size:.78rem;c
   </header>
   <div class="wrap" id="banner"></div>
   <main class="wrap" id="view"></main>
-  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.7</b> · يعمل بدون إنترنت</div></div></footer>
+  <footer class="ft"><div class="wrap">شركة مناف للصناعات الغذائية | إدارة الأمن | نموذج خاضع للتحكم — Manaf Food Industries Co. | Security Department | Controlled Form<div style="margin-top:6px"><b>الإصدار 2.8</b> · يعمل بدون إنترنت</div></div></footer>
 </div>
 <div id="modal" hidden dir="rtl"></div>
 <div id="login" hidden dir="rtl"><div class="lbox"><div class="logo"><img id="loginlogo" alt="مناف"></div><div><h2>السجلات الأمنية الرقمية</h2><div class="en">Manaf · Security Department</div></div>
 <form id="loginform" autocomplete="off"><label for="pin" style="font-weight:600">الرقم السري <span class="en">PIN</span></label><input id="pin" type="password" inputmode="numeric" maxlength="12"><button class="btn primary big block" type="submit">دخول</button><div id="loginerr" class="err"></div></form>
-<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.7</b> · يعمل بدون إنترنت</div></div></div>
+<div class="muted" style="font-size:.8rem">كل حارس يدخل برقمه السري الخاص · السجلات تُحفظ باسمه<br><b>الإصدار 2.8</b> · يعمل بدون إنترنت</div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -640,13 +642,13 @@ function handleWriteErr(e){
 const TABS=[
   {id:"home",ar:"الرئيسية"},
   {id:"patrol",ar:"الجولات الأمنية",code:"37-5"},
-  {id:"handover",ar:"تسليم الوردية",code:"37-1"},
+  {id:"handover",ar:"تسليم الوردية",code:"37-1",ho:true},
   {id:"gate",ar:"البوابة",code:"37-3·6",gate:true},
   {id:"records",ar:"السجلات"},
   {id:"settings",ar:"الإعدادات",owner:true}
 ];
 function renderTabs(){
-  $("#tabs").innerHTML=TABS.filter(t=>(!t.owner||S.isOwner)&&(!t.gate||gateOn())).map(t=>`<a href="#${t.id}" ${S.view===t.id?'aria-current="page"':""}>${ICONS[t.id]}<span>${t.ar}</span>${t.code?`<span class="code">${t.code}</span>`:""}</a>`).join("");
+  $("#tabs").innerHTML=TABS.filter(t=>(!t.owner||S.isOwner)&&(!t.gate||gateOn())&&(!t.ho||hOn())).map(t=>`<a href="#${t.id}" ${S.view===t.id?'aria-current="page"':""}>${ICONS[t.id]}<span>${t.ar}</span>${t.code?`<span class="code">${t.code}</span>`:""}</a>`).join("");
 }
 function go(view){try{history.replaceState(null,"","#"+view)}catch(e){}route(view)}
 function route(forced){
@@ -654,6 +656,7 @@ function route(forced){
   if(!TABS.some(t=>t.id===v))v="home";
   if(v==="settings"&&!S.isOwner)v="home";
   if(v==="gate"&&!gateOn())v="home";
+  if(v==="handover"&&!hOn())v="home";
   S.view=v;renderTabs();renderView();window.scrollTo(0,0);
 }
 window.addEventListener("hashchange",route);
@@ -711,12 +714,12 @@ function renderHome(){
   const hs=handoverState(h);
   const hsChip=!loaded?'<span class="chip na">جارٍ التحميل…</span>':hs==="accepted"?'<span class="chip ok">تم التسليم والاستلام</span>':hs==="awaiting"?'<span class="chip warn">بانتظار توقيع المستلم</span>':'<span class="chip na">لم يُسجَّل بعد</span>';
   const nx=nextShift(cs.shift.id);
-  const fu=openFollowups();const iss=recentIssues();
+  const fu=hOn()?openFollowups():[];const iss=recentIssues();
 
   $("#view").innerHTML=`<div class="stack">
   ${hasExamples()?`<div class="banner info" style="margin-top:0;align-items:center;flex-wrap:wrap"><span>ℹ︎ <b>الصفحة تعرض بيانات تجريبية (مثال)</b> لتوضيح طريقة العمل — الأسماء المكتوب بجانبها "(مثال)" ليست سجلات حقيقية.${S.isOwner?" احذفها من الإعدادات قبل التشغيل الفعلي.":""}</span>${S.isOwner?`<button class="btn" data-act="go" data-v="settings">الإعدادات</button>`:""}</div>`:""}
-  ${pendingBanner(null)}
-  <div class="hero">
+  ${hOn()?pendingBanner(null):""}
+  <div class="hero${hOn()?"":" two"}">
     <div class="card now">
       <div class="k">الوردية الحالية · Current shift</div>
       <div class="shiftname">${esc(cs.shift.name)}</div>
@@ -730,17 +733,17 @@ function renderHome(){
       <div class="spacer"></div>
       <div class="actions"><button class="btn primary block" data-act="go" data-v="patrol">${ICONS.patrol}${open?"متابعة الجولة":"بدء جولة"}</button></div>
     </div>
-    <div class="card tile">
+    ${hOn()?`<div class="card tile">
       <div class="k">تسليم الوردية <span class="formcode">37-1</span></div>
       <div style="margin-top:6px">${hsChip}</div>
       <div class="muted" style="font-size:.85rem">تُسلَّم إلى: ${esc(nx.name)} (<span class="mono">${esc(nx.start)}</span>)</div>
       <div class="spacer"></div>
       <div class="actions"><button class="btn block ${hs==="accepted"?"":"primary"}" data-act="go" data-v="handover">${ICONS.handover}${hs==="accepted"?"عرض السجل":hs==="awaiting"?"توقيع الاستلام":"تسليم الوردية"}</button></div>
-    </div>
+    </div>`:""}
   </div>
 
   <div class="grid2">
-    <div class="card">
+    ${hOn()?`<div class="card">
       <div class="cardhead"><div><h3>المتابعات المفتوحة</h3><div class="en">Open follow-up items from shift handovers</div></div><span class="chip ${fu.length?"warn":"ok"}">${fu.length}</span></div>
       <div class="list" id="fulist">${fu.length?fu.slice(0,12).map(f=>`
         <div class="li"><div class="body">
@@ -749,7 +752,7 @@ function renderHome(){
           <div class="m">${esc(dGs(f.h.date))} · ${esc(f.h.shiftName||shiftName(f.h.shiftId))} · <span class="chip ${f.v.status==="remark"?"warn":"na"}">${ST_LBL[f.v.status]||""}</span></div>
           ${S.isOwner&&canEditData()?`<div class="row" style="margin-top:8px" id="fu-${esc(f.id)}-${f.it.k}" hidden><div class="field"><input type="text" id="funote-${esc(f.id)}-${f.it.k}" placeholder="الإجراء المتخذ للإغلاق"></div><button class="btn primary" data-act="fuClose" data-id="${esc(f.id)}" data-k="${f.it.k}">إغلاق</button></div>`:""}
         </div>${S.isOwner&&canEditData()?`<button class="btn ghost" data-act="fuOpen" data-id="${esc(f.id)}" data-k="${f.it.k}">إغلاق المتابعة</button>`:""}</div>`).join(""):`<div class="empty"><b>لا توجد متابعات مفتوحة</b>البنود التي يُحدَّد لها "يتطلب متابعة: نعم" في تسليم الوردية تظهر هنا حتى تُغلق.</div>`}</div>
-    </div>
+    </div>`:""}
     <div class="card">
       <div class="cardhead"><div><h3>ملاحظات الجولات (آخر 7 أيام)</h3><div class="en">Patrol observations flagged ✗</div></div><span class="chip ${iss.length?"bad":"ok"}">${iss.length}</span></div>
       <div class="list">${iss.length?iss.slice(0,10).map(x=>`
@@ -762,9 +765,9 @@ function renderHome(){
   </div>
 
   <div class="card">
-    <div class="cardhead"><div><h3>سجل الالتزام — آخر 14 يوماً</h3><div class="en">Handover completion and patrol rounds per shift · tap a cell to open it</div></div></div>
+    <div class="cardhead"><div><h3>سجل الالتزام — آخر 14 يوماً</h3><div class="en">${hOn()?"Handover completion and patrol rounds per shift":"Patrol rounds per shift"} · tap a cell to open it</div></div></div>
     <div class="comp">${complianceGrid()}</div>
-    <div class="legend"><span><i style="background:var(--ok-bg);border:1px solid var(--ok)"></i>تم التسليم والاستلام</span><span><i style="background:var(--warn-bg);border:1px solid var(--warn)"></i>بانتظار المستلم</span><span><i style="background:var(--bad-bg);border:1px solid var(--bad)"></i>لم يُسجَّل تسليم</span><span>الرقم = عدد الجولات المكتملة</span></div>
+    <div class="legend">${hOn()?`<span><i style="background:var(--ok-bg);border:1px solid var(--ok)"></i>تم التسليم والاستلام</span><span><i style="background:var(--warn-bg);border:1px solid var(--warn)"></i>بانتظار المستلم</span><span><i style="background:var(--bad-bg);border:1px solid var(--bad)"></i>لم يُسجَّل تسليم</span><span>الرقم = عدد الجولات المكتملة</span>`:`<span><i style="background:var(--ok-bg);border:1px solid var(--ok)"></i>فيها جولات مكتملة</span><span><i style="background:var(--warn-bg);border:1px solid var(--warn)"></i>الوردية الحالية</span><span><i style="background:var(--bad-bg);border:1px solid var(--bad)"></i>بدون جولات</span>`}</div>
   </div>
   </div>`;
 }
@@ -778,6 +781,8 @@ function complianceGrid(){
       const n=(p?.rounds||[]).filter(r=>r.end).length;
       const isCur=d===cs.date&&s.id===cs.shift.id;
       const up=shiftStartDate(d,s)>now||d<first||(st0&&shiftStartDate(d,s)<st0)||(S.recent.loaded.h&&S.recent.loaded.p?false:true);
+      if(!hOn()){const c2=up?"up":n?"ok":(isCur?"warn":"miss");
+        return `<td class="cell ${c2}${isCur?" cur":""}" ${up?"":`data-act="openPatrolShift" data-d="${d}" data-s="${esc(s.id)}" tabindex="0"`} title="${esc(s.name)}">${up?"":n?`${n} جولة`:(isCur?"…":"✗")}</td>`}
       let cls=up?"up":h?(h.status==="accepted"?"ok":"warn"):(isCur?"warn":"miss");
       const sym=up?"":h?(h.status==="accepted"?"✓":"◐"):(isCur?"…":"✗");
       return `<td class="cell ${cls}${isCur?" cur":""}" ${up?"":`data-act="openShift" data-d="${d}" data-s="${esc(s.id)}" tabindex="0"`} title="${esc(s.name)}">${sym}${!up?` <span class="mono">${n}</span>`:""}</td>`;
@@ -1073,6 +1078,7 @@ const etChip=k=>k==="noperm"?`<span class="chip bad">⚠ خروج بدون إذ�
 const G={tab:lsGet("gate-tab")||"v",day:null,v:new Map(),e:new Map(),loaded:{v:false,e:false},roster:null,vf:null,ef:null,gate:lsGet("gate-name")||"البوابة الرئيسية",from:null};
 let gUnsubs=[];
 const gateOn=()=>S.isOwner||!!S.settings.gateForGuards;
+const hOn=()=>!S.settings.handoverOff;
 function blankVF(){return{idNo:"",name:"",company:"",category:"visitor",plate:"",purpose:"",host:"",notes:""}}
 function blankEF(){return{empNo:"",name:"",dept:"",exitType:"permission",reason:"",approvedBy:"",notes:""}}
 function stopGateSub(){gUnsubs.forEach(u=>u());gUnsubs=[]}
@@ -1368,6 +1374,7 @@ document.addEventListener("change",e=>{
   else if(id==="g-ef-empNo")setTimeout(empPrefill,300);
   else if(id==="g-day"&&e.target.value){G.day=e.target.value;if(G.day<G.from)subscribeGate();renderGateLog()}
   else if(id==="set-gate"&&SETF)SETF.gateForGuards=e.target.checked;
+  else if(id==="set-ho"&&SETF)SETF.handoverOff=!e.target.checked;
 });
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-act]");if(!el||el.disabled)return;const a=el.dataset.act;
@@ -1440,6 +1447,7 @@ function missingShifts(type){
   return out.sort((a,b)=>b.t-a.t);
 }
 function renderRecords(){
+  if(!hOn())RF.type="patrol";
   const fo=RF.type==="handover"
     ?[["all","كل السجلات"],["awaiting","بانتظار الاستلام"],["open","متابعات مفتوحة"],["issues","بها ملاحظات"],["missing","ورديات بدون تسليم"]]
     :[["all","كل السجلات"],["issues","بها ملاحظات ✗"],["missing","ورديات بدون جولات"]];
@@ -1447,7 +1455,7 @@ function renderRecords(){
   $("#view").innerHTML=`<div class="stack">
     <div class="pagetitle"><div><h2>أرشيف السجلات</h2><div class="en">All submitted logs · search, open, export</div></div>
       <div class="row">${S.dl&&S.isOwner?`<button class="btn" data-act="exportX">${ICONS.download}تصدير Excel</button>`:""}</div></div>
-    <div class="gtabs"><button data-act="recTab" data-t="handover" aria-pressed="${RF.type==="handover"}"><b>تسليم الوردية</b><span class="formcode">37-1</span><span id="rt-h"></span></button>
+    <div class="gtabs">${hOn()?`<button data-act="recTab" data-t="handover" aria-pressed="${RF.type==="handover"}"><b>تسليم الوردية</b><span class="formcode">37-1</span><span id="rt-h"></span></button>`:""}
       <button data-act="recTab" data-t="patrol" aria-pressed="${RF.type==="patrol"}"><b>الجولات الأمنية</b><span class="formcode">37-5</span><span id="rt-p"></span></button></div>
     <div class="sel">
       <div class="field"><label>من <span class="en">From</span></label><input type="date" id="rf-from" value="${esc(RF.from)}"></div>
@@ -1645,6 +1653,9 @@ function renderSettings(){
       <label style="display:flex;gap:10px;align-items:center;font-weight:600"><input type="checkbox" id="set-gate" ${SETF.gateForGuards?"checked":""} style="width:20px;height:20px"> إتاحة تبويب «البوابة» للحراس</label>
       <p class="muted" style="font-size:.85rem">وهو مقفل يظهر التبويب لك وحدك للتجربة، والخادم يرفض أي تسجيل أو قراءة من الحراس. لما تكون جاهز ضع العلامة واضغط «حفظ الإعدادات». سجلات التجربة احذفها من سجل اليوم قبل التفعيل.</p>
       <div class="row"><button class="btn" data-act="go" data-v="gate">${ICONS.gate}فتح البوابة</button></div></div>
+    <div class="card"><div class="cardhead"><div><h3>تسليم الوردية <span class="formcode">37-1</span></h3><div class="en">Shift handover form</div></div><span class="chip ${SETF.handoverOff?"na":"ok"}">${SETF.handoverOff?"موقوف":"مفعّل"}</span></div>
+      <label style="display:flex;gap:10px;align-items:center;font-weight:600"><input type="checkbox" id="set-ho" ${SETF.handoverOff?"":"checked"} style="width:20px;height:20px"> تفعيل «تسليم الوردية»</label>
+      <p class="muted" style="font-size:.85rem">لما يكون موقوف يختفي التبويب ومربعه من الرئيسية والسجلات عند الجميع، والخادم يرفض أي تسليم جديد. السجلات القديمة تظل محفوظة في جدول البيانات، وترجع تظهر لو فعّلته من جديد.</p></div>
     <div class="row" style="justify-content:flex-end"><button class="btn" data-act="setReset">تراجع عن التغييرات</button><button class="btn primary" data-act="setSave" ${dis()}>حفظ الإعدادات</button></div>
     <div class="card" ${GAS?"hidden":""}><div class="cardhead"><div><h3>البيانات التجريبية</h3><div class="en">Example records (marked "مثال")</div></div><button class="btn danger" data-act="exDel" ${dis()}>حذف كل الأمثلة</button></div><p class="muted" style="font-size:.85rem;margin:0">سجلات توضيحية لآخر أيام وجولات اليوم، أسماؤها مكتوب بجانبها "(مثال)". احذفها قبل أن يبدأ الفريق التعبئة الفعلية — لا تؤثر على أي سجل حقيقي.</p></div>
     ${GAS?gasHelpCard():""}<div class="card" ${GAS?"hidden":""}><h3>إضافة فريق الأمن</h3><div class="en" style="margin-bottom:8px">How your team gets access</div>
@@ -1665,7 +1676,7 @@ async function saveSettings(){
   if(GAS){guards=SETF.guards.map(g=>({name:String(g.name||"").trim(),pin:String(g.pin||"").trim()})).filter(g=>g.name||g.pin);
     for(const g of guards){if(!g.name||!g.pin){toast("لكل حارس اسم ورقم سري","bad");return}if(!/^\d{4,12}$/.test(g.pin)){toast(`الرقم السري لـ ${g.name} يكون 4 أرقام أو أكثر`,"bad");return}}
     const seen={};for(const g of guards){if(seen[g.pin]){toast(`الرقم ${g.pin} مكرر`,"bad");return}seen[g.pin]=1}}
-  const data={shifts:SETF.shifts.map(s=>({id:s.id,name:s.name.trim(),start:s.start,end:s.end})),guards,startDate:SETF.startDate||"",gateForGuards:!!SETF.gateForGuards,updatedAt:isoNow(),updatedBy:S.uid};
+  const data={shifts:SETF.shifts.map(s=>({id:s.id,name:s.name.trim(),start:s.start,end:s.end})),guards,startDate:SETF.startDate||"",gateForGuards:!!SETF.gateForGuards,handoverOff:!!SETF.handoverOff,updatedAt:isoNow(),updatedBy:S.uid};
   const ref=S.db.doc("config/settings");
   try{await enqueue(ref.path,()=>ref.set(data));toast("تم حفظ الإعدادات")}catch(e){}
 }
@@ -1711,6 +1722,7 @@ document.addEventListener("click",e=>{
   else if(a==="rCancel"){if(!PR.active)return;if(!el.dataset.armed){el.dataset.armed="1";el.textContent="اضغط مرة أخرى للتأكيد";setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent="إلغاء الجولة"}},4000);return}const id=PR.active.id;PR.active=null;PR.renderedId=null;clearTimeout(prTimer);prTimer=null;const rounds=(PD.doc?.rounds||[]).filter(r=>r.id!==id);writePatrol({rounds}).catch(()=>{});renderActive();toast("أُلغيت الجولة")}
   else if(a==="rDel"){const id=el.dataset.id;if(el.dataset.armed){const rounds=(PD.doc?.rounds||[]).filter(r=>r.id!==id);writePatrol({rounds}).then(()=>toast("حُذفت الجولة")).catch(()=>{})}else{el.dataset.armed="1";el.textContent="تأكيد الحذف";el.classList.add("danger");setTimeout(()=>{if(el.isConnected){delete el.dataset.armed;el.textContent="حذف";el.classList.remove("danger")}},4000)}}
   else if(a==="openShift"){HSel.date=el.dataset.d;HSel.shiftId=el.dataset.s;go("handover")}
+  else if(a==="openPatrolShift"){PSel.date=el.dataset.d;PSel.shiftId=el.dataset.s;go("patrol")}
   else if(a==="detail")openDetail(el.dataset.type,el.dataset.id);
   else if(a==="recTab"){RF.type=el.dataset.t;lsSet("rec-tab",RF.type);renderRecords()}
   else if(a==="fillMissing"){if(!S.isOwner)return;const d=el.dataset.d,s=el.dataset.s;if(el.dataset.t==="handover"){HSel.date=d;HSel.shiftId=s;go("handover")}else{PSel.date=d;PSel.shiftId=s;go("patrol")}}
@@ -1761,8 +1773,8 @@ if(GAS&&!HAS_RUN&&"serviceWorker" in navigator&&(location.protocol==="https:"||l
 function startSubs(db){
   S.ready=true;renderBanner();renderTabs();
   db.doc("config/settings").onSnapshot(snap=>{
-    if(snap.exists){const d=snap.data();S.settings={startDate:d.startDate||"",gateForGuards:!!d.gateForGuards,shifts:(d.shifts&&d.shifts.length?d.shifts:DEFAULT_SETTINGS.shifts),guards:(d.guards||[]).map(g=>typeof g==="string"?g:g.name).filter(Boolean)};S.guardObjs=(d.guards||[]).filter(g=>g&&typeof g==="object").map(g=>({name:g.name||"",pin:String(g.pin||"")}))}
-    renderBanner();renderTabs();if(S.view==="gate"&&!gateOn())go("home");{const t=document.getElementById("g-trial");if(t)t.hidden=!!S.settings.gateForGuards}
+    if(snap.exists){const d=snap.data();S.settings={startDate:d.startDate||"",gateForGuards:!!d.gateForGuards,handoverOff:!!d.handoverOff,shifts:(d.shifts&&d.shifts.length?d.shifts:DEFAULT_SETTINGS.shifts),guards:(d.guards||[]).map(g=>typeof g==="string"?g:g.name).filter(Boolean)};S.guardObjs=(d.guards||[]).filter(g=>g&&typeof g==="object").map(g=>({name:g.name||"",pin:String(g.pin||"")}))}
+    renderBanner();renderTabs();if((S.view==="gate"&&!gateOn())||(S.view==="handover"&&!hOn()))go("home");if(S.view==="records"&&!hOn()&&RF.type==="handover")renderRecords();{const t=document.getElementById("g-trial");if(t)t.hidden=!!S.settings.gateForGuards}
     if(S.view!=="settings"){SETF=null;if(!$("#modal").hidden||document.activeElement?.matches("input,textarea"))return;if(S.view==="home")renderHome();renderPill()}
   },e=>console.warn(e));
   const from=addDays(ymd(new Date()),-45);
